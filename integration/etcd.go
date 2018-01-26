@@ -71,3 +71,13 @@ func (e *Etcd) Start() error {
 func (e *Etcd) Stop() error {
 	return e.processState.Stop()
 }
+
+// ListeningURL returns the URL this Etcd actually listens on.
+//
+// If you specified
+// a URL at construction time, that's what will be returned here. If Etcd has
+// defaulted to a free port on localhost, that URL is returned. If no URL has
+// been specified, and Etcd hasn't started yet, then we return an error.
+func (e *Etcd) ListeningURL() (*url.URL, error) {
+	return e.processState.ListeningURL(e.URL)
+}

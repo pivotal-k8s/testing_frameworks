@@ -135,3 +135,13 @@ func (ps *ProcessState) Stop() error {
 
 	return nil
 }
+
+func (ps *ProcessState) ListeningURL(u *url.URL) (*url.URL, error) {
+	if u != nil {
+		return u, nil
+	}
+	if ps == nil {
+		return nil, fmt.Errorf("No URL was specified. Etcd will pick a URL when Start() is called")
+	}
+	return &ps.URL, nil
+}

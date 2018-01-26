@@ -26,7 +26,11 @@ func (f *ControlPlane) Start() error {
 	if f.APIServer == nil {
 		f.APIServer = &APIServer{}
 	}
-	f.APIServer.EtcdURL = &f.Etcd.processState.URL
+	var err error
+	f.APIServer.EtcdURL, err = f.Etcd.ListeningURL()
+	if err != nil {
+		return fmt.Errorf("Etcd isn't listening, even though we started it: %s", err)
+	}
 	return f.APIServer.Start()
 }
 

@@ -197,6 +197,36 @@ var _ = Describe("DoDefaulting", func() {
 	})
 })
 
+var _ = Describe("getting the URL we're listening on", func() {
+	Context("when a URL is specified", func() {
+		It("returns that URL", func() {
+			processState := &ProcessState{}
+			expectedURL := &url.URL{Host: "some.host"}
+			actualURL, err := processState.ListeningURL(expectedURL)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualURL).To(Equal(expectedURL))
+		})
+	})
+
+	Context("when a URL is not specified, and one has been picked by the defaulter", func() {
+		It("returns the defaulted value", func() {
+			expectedURL := &url.URL{Host: "some.host"}
+			processState := &ProcessState{DefaultedProcessInput: DefaultedProcessInput{URL: *expectedURL}}
+			actualURL, err := processState.ListeningURL(nil)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualURL).To(Equal(expectedURL))
+		})
+	})
+
+	Context("when a URL is not specified, and the defaulter has not run yet", func() {
+		It("returns an error", func() {
+			var processState *ProcessState
+			_, err := processState.ListeningURL(nil)
+			Expect(err).To(MatchError(ContainSubstring("No URL was specified")))
+		})
+	})
+})
+
 var simpleBashScript = []string{
 	"-c",
 	`
