@@ -10,6 +10,7 @@ import (
 	. "github.com/kubernetes-sig-testing/frameworks/integration/internal"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -223,6 +224,38 @@ var _ = Describe("getting the URL we're listening on", func() {
 			var processState *ProcessState
 			_, err := processState.ListeningURL(nil)
 			Expect(err).To(MatchError(ContainSubstring("No URL was specified")))
+		})
+	})
+})
+
+var _ = Describe("getting IO streams", func() {
+	Context("when a session is running", func() {
+		It("can stream StdOut and StdErr", func() {
+			processState := &ProcessState{
+				Session: &gexec.Session{},
+			}
+			processState.Session.Out = gbytes.NewBuffer()
+			processState.Session.Err = gbytes.NewBuffer()
+			o, err := processState.StdOut()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(o).To(BeIdenticalTo(processState.Session.Out))
+			e, err := processState.StdErr()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(e).To(BeIdenticalTo(processState.Session.Err))
+		})
+	})
+	Context("when etcd hasn't been started yet", func() {
+		It("returns an error", func() {
+			var processState *ProcessState
+			_, err := processState.StdOut()
+			Expect(err).To(MatchError(ContainSubstring("Found a nil process.")))
+			_, err = processState.StdErr()
+			Expect(err).To(MatchError(ContainSubstring("Found a nil process.")))
+			processState = &ProcessState{}
+			_, err = processState.StdOut()
+			Expect(err).To(MatchError(ContainSubstring("Found a nil Session.")))
+			_, err = processState.StdErr()
+			Expect(err).To(MatchError(ContainSubstring("Found a nil Session.")))
 		})
 	})
 })

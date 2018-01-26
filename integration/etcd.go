@@ -2,6 +2,7 @@ package integration
 
 import (
 	"fmt"
+	"io"
 	"time"
 
 	"net/url"
@@ -80,4 +81,18 @@ func (e *Etcd) Stop() error {
 // been specified, and Etcd hasn't started yet, then we return an error.
 func (e *Etcd) ListeningURL() (*url.URL, error) {
 	return e.processState.ListeningURL(e.URL)
+}
+
+// StdOut returns a Reader for the StdOut stream.
+//
+// If you haven't started your Etcd yet, then this method will return an error.
+func (e *Etcd) StdOut() (io.Reader, error) {
+	return e.processState.StdOut()
+}
+
+// StdErr returns a Reader for the StdErr stream.
+//
+// If you haven't started your Etcd yet, then this method will return an error.
+func (e *Etcd) StdErr() (io.Reader, error) {
+	return e.processState.StdErr()
 }

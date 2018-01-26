@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"io"
 	"net/url"
 	"os/exec"
 	"time"
@@ -144,4 +145,24 @@ func (ps *ProcessState) ListeningURL(u *url.URL) (*url.URL, error) {
 		return nil, fmt.Errorf("No URL was specified. Etcd will pick a URL when Start() is called")
 	}
 	return &ps.URL, nil
+}
+
+func (ps *ProcessState) StdOut() (io.Reader, error) {
+	if ps == nil {
+		return nil, fmt.Errorf("Found a nil process. Have you called Start()?")
+	}
+	if ps.Session == nil {
+		return nil, fmt.Errorf("Found a nil Session. Have you called Start()?")
+	}
+	return ps.Session.Out, nil
+}
+
+func (ps *ProcessState) StdErr() (io.Reader, error) {
+	if ps == nil {
+		return nil, fmt.Errorf("Found a nil process. Have you called Start()?")
+	}
+	if ps.Session == nil {
+		return nil, fmt.Errorf("Found a nil Session. Have you called Start()?")
+	}
+	return ps.Session.Err, nil
 }
