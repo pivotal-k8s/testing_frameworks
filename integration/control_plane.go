@@ -46,6 +46,8 @@ func (f *ControlPlane) Stop() error {
 }
 
 // APIURL returns the URL you should connect to to talk to your API.
+//
+// Deprecated: Users should use APIServer.Config() directly instead
 func (f *ControlPlane) APIURL() *url.URL {
 	return f.APIServer.URL
 }
