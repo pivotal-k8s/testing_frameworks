@@ -52,8 +52,16 @@ func (f *ControlPlane) APIURL() *url.URL {
 
 // KubeCtl returns a pre-configured KubeCtl, ready to connect to this
 // ControlPlane.
-func (f *ControlPlane) KubeCtl() *KubeCtl {
+func (f *ControlPlane) KubeCtl() (*KubeCtl, error) {
 	k := &KubeCtl{}
-	k.Opts = append(k.Opts, fmt.Sprintf("--server=%s", f.APIURL()))
-	return k
+	c, err := f.APIServer.Config()
+	if err != nil {
+		return nil, err
+	}
+
+	k.Opts = append(k.Opts,
+		fmt.Sprintf("--server=%s", c.Host),
+	)
+
+	return k, nil
 }
