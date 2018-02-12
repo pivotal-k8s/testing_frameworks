@@ -10,8 +10,9 @@ import (
 // Right now, that means Etcd and your APIServer. This is likely to increase in
 // future.
 type ControlPlane struct {
-	APIServer *APIServer
-	Etcd      *Etcd
+	APIServer         *APIServer
+	Etcd              *Etcd
+	ControllerManager *ControllerManager
 }
 
 // Start will start your control plane processes. To stop them, call Stop().
@@ -27,11 +28,25 @@ func (f *ControlPlane) Start() error {
 		f.APIServer = &APIServer{}
 	}
 	f.APIServer.EtcdURL = f.Etcd.URL
-	return f.APIServer.Start()
+	if err := f.APIServer.Start(); err != nil {
+		return err
+	}
+
+	if f.ControllerManager == nil {
+		f.ControllerManager = &ControllerManager{}
+	}
+	f.ControllerManager.APIServerURL = f.APIServer.URL
+
+	return f.ControllerManager.Start()
 }
 
 // Stop will stop your control plane processes, and clean up their data.
 func (f *ControlPlane) Stop() error {
+	if f.ControllerManager != nil {
+		if err := f.ControllerManager.Stop(); err != nil {
+			return err
+		}
+	}
 	if f.APIServer != nil {
 		if err := f.APIServer.Stop(); err != nil {
 			return err

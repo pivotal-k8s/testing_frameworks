@@ -29,9 +29,11 @@ var _ = Describe("The Testing Framework", func() {
 
 		apiServerURL := controlPlane.APIURL()
 		etcdClientURL := controlPlane.APIServer.EtcdURL
+		controllerManagerURL := controlPlane.ControllerManager.URL
 
 		isEtcdListeningForClients := isSomethingListeningOnPort(etcdClientURL.Host)
 		isAPIServerListening := isSomethingListeningOnPort(apiServerURL.Host)
+		isControllerManagerListening := isSomethingListeningOnPort(controllerManagerURL.Host)
 
 		By("Ensuring Etcd is listening")
 		Expect(isEtcdListeningForClients()).To(BeTrue(),
@@ -40,6 +42,10 @@ var _ = Describe("The Testing Framework", func() {
 		By("Ensuring APIServer is listening")
 		Expect(isAPIServerListening()).To(BeTrue(),
 			fmt.Sprintf("Expected APIServer to listen on %s", apiServerURL.Host))
+
+		By("Ensuring ControllerManager is listening")
+		Expect(isControllerManagerListening()).To(BeTrue(),
+			fmt.Sprintf("Expected ControllerManager to listen on %s", controllerManagerURL.Host))
 
 		By("getting a kubectl & run it against the control plane")
 		kubeCtl := controlPlane.KubeCtl()
@@ -59,6 +65,9 @@ var _ = Describe("The Testing Framework", func() {
 
 		By("Ensuring APIServer is not listening anymore")
 		Expect(isAPIServerListening()).To(BeFalse(), "Expected APIServer not to listen anymore")
+
+		By("Ensuring ControllerManager is not listening anymore")
+		Expect(isControllerManagerListening()).To(BeFalse(), "Expected ControllerManager not to listen anymore")
 
 		By("Not erroring when stopping a stopped ControlPlane")
 		Expect(func() {
