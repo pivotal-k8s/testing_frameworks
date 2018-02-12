@@ -9,7 +9,7 @@ import (
 	"github.com/kubernetes-sig-testing/frameworks/integration/internal"
 )
 
-type ControllerManager struct {
+type Scheduler struct {
 	URL          *url.URL
 	Path         string
 	Args         []string
@@ -22,7 +22,7 @@ type ControllerManager struct {
 	processState *internal.ProcessState
 }
 
-func (c *ControllerManager) Start() error {
+func (c *Scheduler) Start() error {
 	var err error
 
 	if c.APIServerURL == nil {
@@ -32,7 +32,7 @@ func (c *ControllerManager) Start() error {
 	c.processState = &internal.ProcessState{}
 
 	c.processState.DefaultedProcessInput, err = internal.DoDefaulting(
-		"kube-controller-manager",
+		"kube-scheduler",
 		c.URL,
 		"",
 		false,
@@ -44,7 +44,7 @@ func (c *ControllerManager) Start() error {
 		return err
 	}
 
-	c.processState.StartMessage = "Sending events to api server."
+	c.processState.StartMessage = "starting healthz server on"
 
 	c.URL = &c.processState.URL
 	c.Path = c.processState.Path
@@ -52,7 +52,7 @@ func (c *ControllerManager) Start() error {
 	c.StopTimeout = c.processState.StopTimeout
 
 	c.processState.Args, err = internal.RenderTemplates(
-		internal.DoControllerManagerArgDefaulting(c.Args), c,
+		internal.DoSchedulerArgDefaulting(c.Args), c,
 	)
 	if err != nil {
 		return err
@@ -61,6 +61,6 @@ func (c *ControllerManager) Start() error {
 	return c.processState.Start(c.Out, c.Err)
 }
 
-func (c *ControllerManager) Stop() error {
+func (c *Scheduler) Stop() error {
 	return c.processState.Stop()
 }

@@ -30,10 +30,12 @@ var _ = Describe("The Testing Framework", func() {
 		apiServerURL := controlPlane.APIURL()
 		etcdClientURL := controlPlane.APIServer.EtcdURL
 		controllerManagerURL := controlPlane.ControllerManager.URL
+		schedulerURL := controlPlane.Scheduler.URL
 
 		isEtcdListeningForClients := isSomethingListeningOnPort(etcdClientURL.Host)
 		isAPIServerListening := isSomethingListeningOnPort(apiServerURL.Host)
 		isControllerManagerListening := isSomethingListeningOnPort(controllerManagerURL.Host)
+		isSchedulerListening := isSomethingListeningOnPort(schedulerURL.Host)
 
 		By("Ensuring Etcd is listening")
 		Expect(isEtcdListeningForClients()).To(BeTrue(),
@@ -46,6 +48,10 @@ var _ = Describe("The Testing Framework", func() {
 		By("Ensuring ControllerManager is listening")
 		Expect(isControllerManagerListening()).To(BeTrue(),
 			fmt.Sprintf("Expected ControllerManager to listen on %s", controllerManagerURL.Host))
+
+		By("Ensuring Scheduler is listening")
+		Expect(isSchedulerListening()).To(BeTrue(),
+			fmt.Sprintf("Expected Scheduler to listen on %s", schedulerURL.Host))
 
 		By("getting a kubectl & run it against the control plane")
 		kubeCtl := controlPlane.KubeCtl()
@@ -68,6 +74,9 @@ var _ = Describe("The Testing Framework", func() {
 
 		By("Ensuring ControllerManager is not listening anymore")
 		Expect(isControllerManagerListening()).To(BeFalse(), "Expected ControllerManager not to listen anymore")
+
+		By("Ensuring Scheduler is not listening anymore")
+		Expect(isSchedulerListening()).To(BeFalse(), "Expected Scheduler not to listen anymore")
 
 		By("Not erroring when stopping a stopped ControlPlane")
 		Expect(func() {

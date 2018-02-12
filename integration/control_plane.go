@@ -13,6 +13,7 @@ type ControlPlane struct {
 	APIServer         *APIServer
 	Etcd              *Etcd
 	ControllerManager *ControllerManager
+	Scheduler         *Scheduler
 }
 
 // Start will start your control plane processes. To stop them, call Stop().
@@ -36,12 +37,24 @@ func (f *ControlPlane) Start() error {
 		f.ControllerManager = &ControllerManager{}
 	}
 	f.ControllerManager.APIServerURL = f.APIServer.URL
+	if err := f.ControllerManager.Start(); err != nil {
+		return err
+	}
 
-	return f.ControllerManager.Start()
+	if f.Scheduler == nil {
+		f.Scheduler = &Scheduler{}
+	}
+	f.Scheduler.APIServerURL = f.APIServer.URL
+	return f.Scheduler.Start()
 }
 
 // Stop will stop your control plane processes, and clean up their data.
 func (f *ControlPlane) Stop() error {
+	if f.Scheduler != nil {
+		if err := f.Scheduler.Stop(); err != nil {
+			return err
+		}
+	}
 	if f.ControllerManager != nil {
 		if err := f.ControllerManager.Stop(); err != nil {
 			return err
