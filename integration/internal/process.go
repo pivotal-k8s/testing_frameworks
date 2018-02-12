@@ -35,6 +35,7 @@ func DoDefaulting(
 	name string,
 	listenUrl *url.URL,
 	dir string,
+	createDirWhenEmpty bool,
 	path string,
 	startTimeout time.Duration,
 	stopTimeout time.Duration,
@@ -60,7 +61,7 @@ func DoDefaulting(
 		defaults.URL = *listenUrl
 	}
 
-	if dir == "" {
+	if createDirWhenEmpty == true && dir == "" {
 		newDir, err := ioutil.TempDir("", "k8s_test_framework_")
 		if err != nil {
 			return DefaultedProcessInput{}, err

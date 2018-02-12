@@ -165,6 +165,7 @@ var _ = Describe("DoDefaulting", func() {
 				"some name",
 				&url.URL{Host: "some.host.to.listen.on"},
 				"/some/dir",
+				true,
 				"/some/path/to/some/bin",
 				20*time.Hour,
 				65537*time.Millisecond,
@@ -186,6 +187,7 @@ var _ = Describe("DoDefaulting", func() {
 				"some name",
 				nil,
 				"",
+				true,
 				"",
 				0,
 				0,
@@ -214,11 +216,29 @@ var _ = Describe("DoDefaulting", func() {
 				"",
 				nil,
 				"",
+				true,
 				"",
 				0,
 				0,
 			)
 			Expect(err).To(MatchError("must have at least one of name or path"))
+		})
+	})
+
+	Context("when creating a directory should be skipped", func() {
+		It("does not create a directory", func() {
+			defaults, err := DoDefaulting(
+				"some name",
+				nil,
+				"",
+				false,
+				"",
+				0,
+				0,
+			)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(defaults.Dir).To(BeEmpty())
+			Expect(defaults.Dir).NotTo(BeADirectory())
 		})
 	})
 })

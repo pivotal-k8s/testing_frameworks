@@ -74,6 +74,7 @@ func (s *APIServer) Start() error {
 		"kube-apiserver",
 		s.URL,
 		s.CertDir,
+		true,
 		s.Path,
 		s.StartTimeout,
 		s.StopTimeout,

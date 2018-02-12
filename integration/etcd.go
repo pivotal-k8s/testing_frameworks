@@ -69,6 +69,7 @@ func (e *Etcd) Start() error {
 		"etcd",
 		e.URL,
 		e.DataDir,
+		true,
 		e.Path,
 		e.StartTimeout,
 		e.StopTimeout,
