@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/url"
 	"time"
 
 	"github.com/kubernetes-sig-testing/frameworks/integration"
@@ -53,14 +54,23 @@ var _ = Describe("The Testing Framework", func() {
 		Expect(isSchedulerListening()).To(BeTrue(),
 			fmt.Sprintf("Expected Scheduler to listen on %s", schedulerURL.Host))
 
-		By("getting a kubectl & run it against the control plane")
+		By("Starting a virtual kubelet")
+		vk := &integration.VirtualKubelet{}
+		vk.Conf = renderKubeConf(apiServerURL)
+		Expect(vk.Start()).To(Succeed())
+		defer func() {
+			By("Stopping the virtual kubelet")
+			Expect(vk.Stop()).To(Succeed())
+		}()
+
+		By("Getting a kubectl & run it against the control plane")
 		kubeCtl := controlPlane.KubeCtl()
-		stdout, stderr, err := kubeCtl.Run("get", "pods")
+		stdout, stderr, err := kubeCtl.Run("get", "nodes")
 		Expect(err).NotTo(HaveOccurred())
-		bytes, err := ioutil.ReadAll(stdout)
+		errBytes, err := ioutil.ReadAll(stderr)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(bytes).To(BeEmpty())
-		Expect(stderr).To(ContainSubstring("No resources found."))
+		Expect(stdout).To(ContainSubstring("virtual-kubelet   Ready"))
+		Expect(errBytes).To(BeEmpty())
 
 		By("Stopping all the control plane processes")
 		err = controlPlane.Stop()
@@ -139,4 +149,27 @@ func isSomethingListeningOnPort(hostAndPort string) portChecker {
 		conn.Close()
 		return true
 	}
+}
+
+func renderKubeConf(apiUrl *url.URL) string {
+	tmpl := `
+apiVersion: v1
+kind: Config
+users:
+- name: vk_user
+  user:
+    username: admin
+    password: admin
+clusters:
+- name: vk_cluster
+  cluster:
+    server: %s
+contexts:
+- context:
+    cluster: vk_cluster
+    user: vk_user
+  name: vk_ctx
+current-context: vk_ctx
+`
+	return fmt.Sprintf(tmpl, apiUrl)
 }
