@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"net/url"
 	"time"
 
 	"github.com/kubernetes-sig-testing/frameworks/integration"
@@ -56,8 +55,8 @@ var _ = Describe("The Testing Framework", func() {
 
 		By("Starting a virtual kubelet")
 		vk := &integration.VirtualKubelet{}
-		vk.Conf = renderKubeConf(apiServerURL)
-		Expect(vk.Start()).To(Succeed())
+		vk.APIServerURL = apiServerURL
+		Expect(vk.Start()).NotTo(HaveOccurred())
 		defer func() {
 			By("Stopping the virtual kubelet")
 			Expect(vk.Stop()).To(Succeed())
@@ -149,27 +148,4 @@ func isSomethingListeningOnPort(hostAndPort string) portChecker {
 		conn.Close()
 		return true
 	}
-}
-
-func renderKubeConf(apiUrl *url.URL) string {
-	tmpl := `
-apiVersion: v1
-kind: Config
-users:
-- name: vk_user
-  user:
-    username: admin
-    password: admin
-clusters:
-- name: vk_cluster
-  cluster:
-    server: %s
-contexts:
-- context:
-    cluster: vk_cluster
-    user: vk_user
-  name: vk_ctx
-current-context: vk_ctx
-`
-	return fmt.Sprintf(tmpl, apiUrl)
 }

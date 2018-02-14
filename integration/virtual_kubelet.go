@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"fmt"
 	"io"
 	"net/url"
 	"os"
@@ -11,16 +12,14 @@ import (
 )
 
 type VirtualKubelet struct {
-	URL          *url.URL
 	Path         string
 	Args         []string
 	ConfDir      string
+	APIServerURL *url.URL
 	StartTimeout time.Duration
 	StopTimeout  time.Duration
 	Out          io.Writer
 	Err          io.Writer
-
-	Conf string
 
 	processState *internal.ProcessState
 }
@@ -32,7 +31,7 @@ func (vk *VirtualKubelet) Start() error {
 
 	vk.processState.DefaultedProcessInput, err = internal.DoDefaulting(
 		"virtual-kubelet",
-		vk.URL,
+		nil,
 		vk.ConfDir,
 		true,
 		vk.Path,
@@ -45,7 +44,6 @@ func (vk *VirtualKubelet) Start() error {
 
 	vk.processState.StartMessage = "Node 'virtual-kubelet' with OS type 'Linux' registered"
 
-	vk.URL = &vk.processState.URL
 	vk.Path = vk.processState.Path
 	vk.StartTimeout = vk.processState.StartTimeout
 	vk.StopTimeout = vk.processState.StopTimeout
@@ -80,7 +78,8 @@ func (vk *VirtualKubelet) setConf() error {
 		return err
 	}
 
-	_, err = file.Write([]byte(vk.Conf))
+	kubeConf := fmt.Sprintf(kubeConfTmpl, vk.APIServerURL)
+	_, err = file.Write([]byte(kubeConf))
 	if err != nil {
 		return err
 	}
@@ -92,3 +91,23 @@ func (vk *VirtualKubelet) setConf() error {
 
 	return nil
 }
+
+const kubeConfTmpl string = `
+apiVersion: v1
+kind: Config
+users:
+- name: vk_user
+  user:
+    username: admin
+    password: admin
+clusters:
+- name: vk_cluster
+  cluster:
+    server: %s
+contexts:
+- context:
+    cluster: vk_cluster
+    user: vk_user
+  name: vk_ctx
+current-context: vk_ctx
+`
