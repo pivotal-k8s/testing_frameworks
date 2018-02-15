@@ -2,7 +2,7 @@ package internal
 
 var VirtualKubeletDefaultArgs = []string{
 	"--provider=mock",
-	"--kubeconfig={{ .ConfDir }}/kube.conf",
+	"--kubeconfig={{ .Dir }}/kube.conf",
 }
 
 func DoVirtualKubeletArgDefaulting(args []string) []string {

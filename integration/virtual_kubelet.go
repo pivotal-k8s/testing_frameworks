@@ -42,15 +42,6 @@ type VirtualKubelet struct {
 	// directory, and the Stop() method will clean it up.
 	ConfDir string
 
-	// APIServerURL is the URL pointing to the APIServer of the control plane
-	// this VirtualKubelet should connect to.
-	//
-	// It can be set directly on the struct, or indirectly by calling the
-	// `RegisterTo` method.
-	// This setting is mandatory and an error will be emitted when this is not
-	// set at start time.
-	APIServerURL *url.URL
-
 	// StartTimeout, StopTimeout specify the time the APIServer is allowed to
 	// take when starting and stoppping before an error is emitted.
 	//
@@ -69,8 +60,12 @@ type VirtualKubelet struct {
 
 // Start starts the virtual kubelet, waits for it to come up, and returns an
 // error, if one occoured.
-func (vk *VirtualKubelet) Start() error {
+func (vk *VirtualKubelet) Start(r RemoteConnectionConfig) error {
 	var err error
+
+	if r.URL == nil {
+		return fmt.Errorf("Remote connection config must include a URL")
+	}
 
 	vk.processState = &internal.ProcessState{}
 
@@ -89,19 +84,22 @@ func (vk *VirtualKubelet) Start() error {
 
 	vk.processState.StartMessage = "Node 'virtual-kubelet' with OS type 'Linux' registered"
 
-	vk.Path = vk.processState.Path
-	vk.StartTimeout = vk.processState.StartTimeout
-	vk.StopTimeout = vk.processState.StopTimeout
-	vk.ConfDir = vk.processState.Dir
+	templateVars := struct {
+		*internal.ProcessState
+	}{
+		vk.processState,
+	}
 
 	vk.processState.Args, err = internal.RenderTemplates(
-		internal.DoVirtualKubeletArgDefaulting(vk.Args), vk,
+		internal.DoVirtualKubeletArgDefaulting(vk.Args),
+		templateVars,
 	)
 	if err != nil {
 		return err
 	}
 
-	if err := vk.setConf(); err != nil {
+	confPath := path.Join(vk.processState.Dir, "kube.conf")
+	if err := writeCubeConfig(confPath, r.URL); err != nil {
 		return err
 	}
 
@@ -114,17 +112,10 @@ func (vk *VirtualKubelet) Stop() error {
 	return vk.processState.Stop()
 }
 
-// RegisterTo configures the VirtualKubelet in a way so that it registers &
-// connects upon start to the control plane handed in. It is the responsibility
-// of this VirtualKubelet to get all the data needed from the control plane and
-// set itself up accordingly.
-func (vk *VirtualKubelet) RegisterTo(cp *ControlPlane) {
-	vk.APIServerURL = cp.APIURL()
-}
+// TODO The following is temporary. Eventually this should all be generated
+//      from the RemoteConnectionConfig / rest.Config
 
-func (vk *VirtualKubelet) setConf() error {
-	kubeConfPath := path.Join(vk.ConfDir, "kube.conf")
-
+func writeCubeConfig(kubeConfPath string, apiServerURL *url.URL) error {
 	var err error
 	var file *os.File
 
@@ -133,7 +124,7 @@ func (vk *VirtualKubelet) setConf() error {
 		return err
 	}
 
-	kubeConf := fmt.Sprintf(kubeConfTmpl, vk.APIServerURL)
+	kubeConf := fmt.Sprintf(kubeConfTmpl, apiServerURL)
 	_, err = file.Write([]byte(kubeConf))
 	if err != nil {
 		return err

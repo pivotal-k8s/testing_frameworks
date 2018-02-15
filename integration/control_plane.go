@@ -18,6 +18,10 @@ type ControlPlane struct {
 	AdditionalComponents []ControlPlaneComponent
 }
 
+type RemoteConnectionConfig struct {
+	URL *url.URL
+}
+
 // ControlPlaneComponent is an additional component that can be added to the
 // control plane.
 //
@@ -26,9 +30,8 @@ type ControlPlane struct {
 // is passing the control plane in question, so the component has access to the
 // control it should connect to and can query it for the configuration needed.
 type ControlPlaneComponent interface {
-	Start() error
+	Start(RemoteConnectionConfig) error
 	Stop() error
-	RegisterTo(*ControlPlane)
 }
 
 // Start will start your control plane processes. To stop them, call Stop().
@@ -49,8 +52,10 @@ func (f *ControlPlane) Start() error {
 	}
 
 	for _, c := range f.AdditionalComponents {
-		c.RegisterTo(f)
-		if err := c.Start(); err != nil {
+		r := RemoteConnectionConfig{
+			URL: f.APIServer.URL,
+		}
+		if err := c.Start(r); err != nil {
 			return err
 		}
 	}

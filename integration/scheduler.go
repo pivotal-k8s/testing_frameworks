@@ -37,15 +37,6 @@ type Scheduler struct {
 	// be used.
 	Args []string
 
-	// APIServerURL is the URL pointing to the APIServer of the control plane
-	// this Scheduler should connect to.
-	//
-	// It can be set directly on the struct, or indirectly by calling the
-	// `RegisterTo` method.
-	// This setting is mandatory and an error will be emitted when this is not
-	// set at start time.
-	APIServerURL *url.URL
-
 	// StartTimeout, StopTimeout specify the time the APIServer is allowed to
 	// take when starting and stoppping before an error is emitted.
 	//
@@ -64,11 +55,11 @@ type Scheduler struct {
 
 // Start starts the scheduler, waits for it to come up, and returns an error,
 // if occurred.
-func (c *Scheduler) Start() error {
+func (c *Scheduler) Start(r RemoteConnectionConfig) error {
 	var err error
 
-	if c.APIServerURL == nil {
-		return fmt.Errorf("APIServerURL must be configured")
+	if r.URL == nil {
+		return fmt.Errorf("Remote connection config must include a URL")
 	}
 
 	c.processState = &internal.ProcessState{}
@@ -88,13 +79,20 @@ func (c *Scheduler) Start() error {
 
 	c.processState.StartMessage = "starting healthz server on"
 
+	// TODO Remove mutation of main struct
 	c.URL = &c.processState.URL
-	c.Path = c.processState.Path
-	c.StartTimeout = c.processState.StartTimeout
-	c.StopTimeout = c.processState.StopTimeout
+
+	templateVars := struct {
+		*internal.ProcessState
+		APIServerURL *url.URL
+	}{
+		c.processState,
+		r.URL,
+	}
 
 	c.processState.Args, err = internal.RenderTemplates(
-		internal.DoSchedulerArgDefaulting(c.Args), c,
+		internal.DoSchedulerArgDefaulting(c.Args),
+		templateVars,
 	)
 	if err != nil {
 		return err
@@ -106,12 +104,4 @@ func (c *Scheduler) Start() error {
 // Stop stops this process gracefully, waits for its termination.
 func (c *Scheduler) Stop() error {
 	return c.processState.Stop()
-}
-
-// RegisterTo configures the scheduler in a way so that it registers & connects
-// upon start to the control plane handed. It is the responsibility of this
-// scheduler to get all the data needed from the control plane and set itself
-// up accordingly.
-func (c *Scheduler) RegisterTo(cp *ControlPlane) {
-	c.APIServerURL = cp.APIURL()
 }

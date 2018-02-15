@@ -39,15 +39,6 @@ type ControllerManager struct {
 	// ControllerManager will be used.
 	Args []string
 
-	// APIServerURL is the URL pointing to the APIServer of the control plane
-	// this Scheduler should connect to.
-	//
-	// It can be set directly on the struct, or indirectly by calling the
-	// `RegisterTo` method.
-	// This setting is mandatory and an error will be emitted when this is not
-	// set at start time.
-	APIServerURL *url.URL
-
 	// StartTimeout, StopTimeout specify the time the APIServer is allowed to
 	// take when starting and stoppping before an error is emitted.
 	//
@@ -66,11 +57,11 @@ type ControllerManager struct {
 
 // Start starts the controller manager, waits for it to come up, and returns an
 // error, if occurred.
-func (c *ControllerManager) Start() error {
+func (c *ControllerManager) Start(r RemoteConnectionConfig) error {
 	var err error
 
-	if c.APIServerURL == nil {
-		return fmt.Errorf("APIServerURL must be configured")
+	if r.URL == nil {
+		return fmt.Errorf("Remote connection config must include a URL")
 	}
 
 	c.processState = &internal.ProcessState{}
@@ -90,13 +81,20 @@ func (c *ControllerManager) Start() error {
 
 	c.processState.StartMessage = "Sending events to api server."
 
+	// TODO Remove mutation of main struct
 	c.URL = &c.processState.URL
-	c.Path = c.processState.Path
-	c.StartTimeout = c.processState.StartTimeout
-	c.StopTimeout = c.processState.StopTimeout
+
+	templateVars := struct {
+		*internal.ProcessState
+		APIServerURL *url.URL
+	}{
+		c.processState,
+		r.URL,
+	}
 
 	c.processState.Args, err = internal.RenderTemplates(
-		internal.DoControllerManagerArgDefaulting(c.Args), c,
+		internal.DoControllerManagerArgDefaulting(c.Args),
+		templateVars,
 	)
 	if err != nil {
 		return err
@@ -108,12 +106,4 @@ func (c *ControllerManager) Start() error {
 // Stop stops this process gracefully, waits for its termination.
 func (c *ControllerManager) Stop() error {
 	return c.processState.Stop()
-}
-
-// RegisterTo configures the controller manager in a way so that it registers &
-// connects to the control plane handed in upon start. It is the responsibility
-// of this controller manager to get all the data needed from the control plane
-// and set itself up accordingly.
-func (c *ControllerManager) RegisterTo(cp *ControlPlane) {
-	c.APIServerURL = cp.APIURL()
 }
