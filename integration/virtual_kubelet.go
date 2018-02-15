@@ -11,19 +11,64 @@ import (
 	"github.com/kubernetes-sig-testing/frameworks/integration/internal"
 )
 
+// VirtualKubelet knows how to run a virtual-kubelet
 type VirtualKubelet struct {
-	Path         string
-	Args         []string
-	ConfDir      string
+	// Path is the path to the virtual-kubelet binary.
+	//
+	// If this is left as the empty string, we will attempt to locate a binary,
+	// by checking for the TEST_ASSET_VIRTUAL_KUBELET environment variable, and
+	// the default test assets directory. See the "Binaries" section above (in
+	// doc.go) for details.
+	Path string
+
+	// Args is a list of arguments which will passed to the virtual-kubelet
+	// binary.  Before they are passed on, they will be evaluated as go-template
+	// strings.
+	// This means you can use fields which are defined and exported on this
+	// VirtualKubelet struct (e.g. "--kubeconfig={{ .ConfDir }}/kube.conf").
+	// Those templates will be evaluated after the defaulting of the
+	// VirtualKubelet's fields has already happened and just before the binary
+	// actually gets started. Thus you have access to caluclated fields like
+	// `ConfDir` and others.
+	//
+	// If not specified, the minimal set of arguments to run the APIServer will
+	// be used.
+	Args []string
+
+	// ConfDir is a path to a directory containing whatever configuration the
+	// virtual kubelet needs.
+	//
+	// If left unspecified, then the Start() method will create a fresh temporary
+	// directory, and the Stop() method will clean it up.
+	ConfDir string
+
+	// APIServerURL is the URL pointing to the APIServer of the control plane
+	// this VirtualKubelet should connect to.
+	//
+	// It can be set directly on the struct, or indirectly by calling the
+	// `RegisterTo` method.
+	// This setting is mandatory and an error will be emitted when this is not
+	// set at start time.
 	APIServerURL *url.URL
+
+	// StartTimeout, StopTimeout specify the time the APIServer is allowed to
+	// take when starting and stoppping before an error is emitted.
+	//
+	// If not specified, these default to 20 seconds.
 	StartTimeout time.Duration
 	StopTimeout  time.Duration
-	Out          io.Writer
-	Err          io.Writer
+
+	// Out, Err specify where APIServer should write its StdOut, StdErr to.
+	//
+	// If not specified, the output will be discarded.
+	Out io.Writer
+	Err io.Writer
 
 	processState *internal.ProcessState
 }
 
+// Start starts the virtual kubelet, waits for it to come up, and returns an
+// error, if one occoured.
 func (vk *VirtualKubelet) Start() error {
 	var err error
 
@@ -63,10 +108,16 @@ func (vk *VirtualKubelet) Start() error {
 	return vk.processState.Start(vk.Out, vk.Err)
 }
 
+// Stop stops this process gracefully, waits for its termination, and cleans up
+// the ConfDir if necessary.
 func (vk *VirtualKubelet) Stop() error {
 	return vk.processState.Stop()
 }
 
+// RegisterTo configures the VirtualKubelet in a way so that it registers &
+// connects upon start to the control plane handed in. It is the responsibility
+// of this VirtualKubelet to get all the data needed from the control plane and
+// set itself up accordingly.
 func (vk *VirtualKubelet) RegisterTo(cp *ControlPlane) {
 	vk.APIServerURL = cp.APIURL()
 }

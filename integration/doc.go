@@ -21,7 +21,7 @@ your tests:
 	// your tests
 	cp.Stop()
 
-Components
+Main Components
 
 Currently the framework provides the following components:
 
@@ -44,6 +44,32 @@ documentation below.
 
 KubeCtl: Wraps around a `kubectl` binary and can `Run(...)` arbitrary commands
 against a kubernetes control plane.
+
+Additional Components
+
+A control plane can be configured with more components then just Etcd and the
+APIServer.
+
+To do so, an additional component needs to implement the
+`ControlPlaneComponent` interface and the control plane needs to be configured
+to use this additional component.
+
+This package ships with some additional components (ControllerManager,
+Scheduler, VirtualKubelet). Those are not added to the control plane by
+default. If you wish to use one or more of those, set up the control plane like
+that:
+
+	scheduler := &integration.Scheduler{}
+	vKubelet := &integration.VirtualKubelet{}
+	cp := &integration.ControlPlane{
+		AdditionalComponents: []integration.ControlPlaneComponent{
+			scheduler,
+			vKubelet,
+		}
+	}
+	cp.Start()
+	// exercise the control plane
+	cp.Stop()
 
 Binaries
 

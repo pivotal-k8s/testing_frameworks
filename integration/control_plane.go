@@ -7,14 +7,24 @@ import (
 
 // ControlPlane is a struct that knows how to start your test control plane.
 //
-// Right now, that means Etcd and your APIServer. This is likely to increase in
-// future.
+// A minimal control plane consists of an Etcd and an APIServer.
+//
+// Additionall control plane components can be added as `AdditionalComponents`.
+// These will be started and stopped with the control plane when it is brought
+// up and teared down.
 type ControlPlane struct {
 	APIServer            *APIServer
 	Etcd                 *Etcd
 	AdditionalComponents []ControlPlaneComponent
 }
 
+// ControlPlaneComponent is an additional component that can be added to the
+// control plane.
+//
+// It is the responsibility of a component to configure itself to be part
+// of the control plane. This can be done in `RegisterTo()` method. This method
+// is passing the control plane in question, so the component has access to the
+// control it should connect to and can query it for the configuration needed.
 type ControlPlaneComponent interface {
 	Start() error
 	Stop() error
