@@ -64,3 +64,7 @@ func (c *Scheduler) Start() error {
 func (c *Scheduler) Stop() error {
 	return c.processState.Stop()
 }
+
+func (c *Scheduler) RegisterTo(cp *ControlPlane) {
+	c.APIServerURL = cp.APIURL()
+}

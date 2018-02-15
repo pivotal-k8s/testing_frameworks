@@ -10,10 +10,15 @@ import (
 // Right now, that means Etcd and your APIServer. This is likely to increase in
 // future.
 type ControlPlane struct {
-	APIServer         *APIServer
-	Etcd              *Etcd
-	ControllerManager *ControllerManager
-	Scheduler         *Scheduler
+	APIServer            *APIServer
+	Etcd                 *Etcd
+	AdditionalComponents []ControlPlaneComponent
+}
+
+type ControlPlaneComponent interface {
+	Start() error
+	Stop() error
+	RegisterTo(*ControlPlane)
 }
 
 // Start will start your control plane processes. To stop them, call Stop().
@@ -33,33 +38,24 @@ func (f *ControlPlane) Start() error {
 		return err
 	}
 
-	if f.ControllerManager == nil {
-		f.ControllerManager = &ControllerManager{}
-	}
-	f.ControllerManager.APIServerURL = f.APIServer.URL
-	if err := f.ControllerManager.Start(); err != nil {
-		return err
+	for _, c := range f.AdditionalComponents {
+		c.RegisterTo(f)
+		if err := c.Start(); err != nil {
+			return err
+		}
 	}
 
-	if f.Scheduler == nil {
-		f.Scheduler = &Scheduler{}
-	}
-	f.Scheduler.APIServerURL = f.APIServer.URL
-	return f.Scheduler.Start()
+	return nil
 }
 
 // Stop will stop your control plane processes, and clean up their data.
 func (f *ControlPlane) Stop() error {
-	if f.Scheduler != nil {
-		if err := f.Scheduler.Stop(); err != nil {
-			return err
+	for _, c := range f.AdditionalComponents {
+		if err := c.Stop(); err != nil {
+			return nil
 		}
 	}
-	if f.ControllerManager != nil {
-		if err := f.ControllerManager.Stop(); err != nil {
-			return err
-		}
-	}
+
 	if f.APIServer != nil {
 		if err := f.APIServer.Stop(); err != nil {
 			return err

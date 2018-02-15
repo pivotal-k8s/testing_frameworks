@@ -67,6 +67,10 @@ func (vk *VirtualKubelet) Stop() error {
 	return vk.processState.Stop()
 }
 
+func (vk *VirtualKubelet) RegisterTo(cp *ControlPlane) {
+	vk.APIServerURL = cp.APIURL()
+}
+
 func (vk *VirtualKubelet) setConf() error {
 	kubeConfPath := path.Join(vk.ConfDir, "kube.conf")
 

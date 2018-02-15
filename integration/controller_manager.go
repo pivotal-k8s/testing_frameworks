@@ -64,3 +64,7 @@ func (c *ControllerManager) Start() error {
 func (c *ControllerManager) Stop() error {
 	return c.processState.Stop()
 }
+
+func (c *ControllerManager) RegisterTo(cp *ControlPlane) {
+	c.APIServerURL = cp.APIURL()
+}

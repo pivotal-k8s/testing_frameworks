@@ -23,14 +23,23 @@ var _ = Describe("The Testing Framework", func() {
 
 		controlPlane = &integration.ControlPlane{}
 
+		controllerManager, scheduler, vKubelet :=
+			&integration.ControllerManager{},
+			&integration.Scheduler{},
+			&integration.VirtualKubelet{}
+
+		controlPlane.AdditionalComponents = []integration.ControlPlaneComponent{
+			controllerManager, scheduler, vKubelet,
+		}
+
 		By("Starting all the control plane processes")
 		err = controlPlane.Start()
 		Expect(err).NotTo(HaveOccurred(), "Expected controlPlane to start successfully")
 
 		apiServerURL := controlPlane.APIURL()
 		etcdClientURL := controlPlane.APIServer.EtcdURL
-		controllerManagerURL := controlPlane.ControllerManager.URL
-		schedulerURL := controlPlane.Scheduler.URL
+		controllerManagerURL := controllerManager.URL
+		schedulerURL := scheduler.URL
 
 		isEtcdListeningForClients := isSomethingListeningOnPort(etcdClientURL.Host)
 		isAPIServerListening := isSomethingListeningOnPort(apiServerURL.Host)
@@ -52,15 +61,6 @@ var _ = Describe("The Testing Framework", func() {
 		By("Ensuring Scheduler is listening")
 		Expect(isSchedulerListening()).To(BeTrue(),
 			fmt.Sprintf("Expected Scheduler to listen on %s", schedulerURL.Host))
-
-		By("Starting a virtual kubelet")
-		vk := &integration.VirtualKubelet{}
-		vk.APIServerURL = apiServerURL
-		Expect(vk.Start()).NotTo(HaveOccurred())
-		defer func() {
-			By("Stopping the virtual kubelet")
-			Expect(vk.Stop()).To(Succeed())
-		}()
 
 		By("Getting a kubectl & run it against the control plane")
 		kubeCtl := controlPlane.KubeCtl()
@@ -93,6 +93,26 @@ var _ = Describe("The Testing Framework", func() {
 		}).NotTo(Panic())
 	})
 
+	Context("when no additional components are configured", func() {
+		It("can start and stop everthing", func() {
+			controlPlane = &integration.ControlPlane{}
+
+			Expect(controlPlane.Start()).To(Succeed())
+
+			etcdListening := isSomethingListeningOnPort(controlPlane.Etcd.URL.Host)
+			apiServerListening := isSomethingListeningOnPort(controlPlane.APIURL().Host)
+
+			Expect(controlPlane.AdditionalComponents).To(HaveLen(0))
+			Expect(etcdListening()).To(BeTrue())
+			Expect(apiServerListening()).To(BeTrue())
+
+			Expect(controlPlane.Stop()).To(Succeed())
+
+			Expect(etcdListening()).To(BeFalse())
+			Expect(apiServerListening()).To(BeFalse())
+		})
+	})
+
 	Context("when Stop() is called on the control plane", func() {
 		Context("but the control plane is not started yet", func() {
 			It("does not error", func() {
@@ -109,14 +129,14 @@ var _ = Describe("The Testing Framework", func() {
 
 	Context("when the control plane is configured with its components", func() {
 		It("it does not default them", func() {
+			controlPlane = &integration.ControlPlane{}
+
 			myEtcd, myAPIServer :=
 				&integration.Etcd{StartTimeout: 15 * time.Second},
 				&integration.APIServer{StopTimeout: 16 * time.Second}
 
-			controlPlane = &integration.ControlPlane{
-				Etcd:      myEtcd,
-				APIServer: myAPIServer,
-			}
+			controlPlane.Etcd = myEtcd
+			controlPlane.APIServer = myAPIServer
 
 			Expect(controlPlane.Start()).To(Succeed())
 			Expect(controlPlane.Etcd).To(BeIdenticalTo(myEtcd))
