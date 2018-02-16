@@ -18,10 +18,6 @@ type ControlPlane struct {
 	AdditionalComponents []ControlPlaneComponent
 }
 
-type RemoteConnectionConfig struct {
-	URL *url.URL
-}
-
 // ControlPlaneComponent is an additional component that can be added to the
 // control plane.
 //
@@ -32,6 +28,7 @@ type RemoteConnectionConfig struct {
 type ControlPlaneComponent interface {
 	Start(RemoteConnectionConfig) error
 	Stop() error
+	ConnectionConfig() (RemoteConnectionConfig, error)
 }
 
 // Start will start your control plane processes. To stop them, call Stop().

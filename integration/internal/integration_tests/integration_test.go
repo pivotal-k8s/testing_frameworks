@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/url"
 	"time"
 
 	"github.com/kubernetes-sig-testing/frameworks/integration"
@@ -38,8 +39,8 @@ var _ = Describe("The Testing Framework", func() {
 
 		apiServerURL := controlPlane.APIURL()
 		etcdClientURL := controlPlane.APIServer.EtcdURL
-		controllerManagerURL := controllerManager.URL
-		schedulerURL := scheduler.URL
+		controllerManagerURL := getURL(controllerManager)
+		schedulerURL := getURL(scheduler)
 
 		isEtcdListeningForClients := isSomethingListeningOnPort(etcdClientURL.Host)
 		isAPIServerListening := isSomethingListeningOnPort(apiServerURL.Host)
@@ -155,6 +156,12 @@ var _ = Describe("The Testing Framework", func() {
 		})
 	}, 10)
 })
+
+func getURL(c integration.ControlPlaneComponent) *url.URL {
+	r, err := c.ConnectionConfig()
+	Expect(err).NotTo(HaveOccurred())
+	return r.URL
+}
 
 type portChecker func() bool
 

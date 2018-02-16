@@ -79,9 +79,6 @@ func (c *Scheduler) Start(r RemoteConnectionConfig) error {
 
 	c.processState.StartMessage = "starting healthz server on"
 
-	// TODO Remove mutation of main struct
-	c.URL = &c.processState.URL
-
 	templateVars := struct {
 		*internal.ProcessState
 		APIServerURL *url.URL
@@ -104,4 +101,8 @@ func (c *Scheduler) Start(r RemoteConnectionConfig) error {
 // Stop stops this process gracefully, waits for its termination.
 func (c *Scheduler) Stop() error {
 	return c.processState.Stop()
+}
+
+func (c *Scheduler) ConnectionConfig() (conf RemoteConnectionConfig, err error) {
+	return processStateToConnectionConfig(c.processState)
 }

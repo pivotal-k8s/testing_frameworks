@@ -112,6 +112,10 @@ func (vk *VirtualKubelet) Stop() error {
 	return vk.processState.Stop()
 }
 
+func (vk *VirtualKubelet) ConnectionConfig() (RemoteConnectionConfig, error) {
+	return RemoteConnectionConfig{}, nil
+}
+
 // TODO The following is temporary. Eventually this should all be generated
 //      from the RemoteConnectionConfig / rest.Config
 
