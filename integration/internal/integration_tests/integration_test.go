@@ -1,10 +1,16 @@
 package integration_tests
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/url"
+	"os"
+	"os/exec"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/kubernetes-sig-testing/frameworks/integration"
@@ -120,6 +126,88 @@ var _ = Describe("The Testing Framework", func() {
 		})
 	})
 
+	Describe("RBAC", func() {
+		var (
+			cp         *integration.ControlPlane
+			roleFile   string
+			enableRBAC bool
+		)
+
+		role := `
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: pod-reader
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+`
+
+		BeforeEach(func() {
+			enableRBAC = false
+		})
+
+		JustBeforeEach(func() {
+			apiServer := &integration.APIServer{
+				EnableRBAC: enableRBAC,
+			}
+			cp = &integration.ControlPlane{
+				APIServer: apiServer,
+			}
+			Expect(cp.Start()).To(Succeed())
+
+			roleFile = tempFileWithContent(role)
+		})
+
+		AfterEach(func() {
+			Expect(cp.Stop()).To(Succeed())
+			Expect(os.Remove(roleFile)).To(Succeed())
+		})
+
+		It("fails to create a role resource", func() {
+			kubeCtl := cp.KubeCtl()
+
+			triggeringRoleCreationFailure := func() error {
+				_, stderr, err := kubeCtl.Run("create", "-f", roleFile)
+				expectedStderr := "no matches for rbac.authorization.k8s.io/, Kind=Role"
+				errCouldCreate := errors.New("Role could be created")
+
+				if !strings.Contains(readAll(stderr), expectedStderr) {
+					return errCouldCreate
+				}
+				if err == nil {
+					return errCouldCreate
+				}
+				if getExitCode(err) == 0 {
+					return errCouldCreate
+				}
+
+				return nil
+			}
+
+			Consistently(triggeringRoleCreationFailure, "10s").Should(
+				Succeed(), "Creating a role should fail",
+			)
+		})
+
+		Context("when RBAC is enabled", func() {
+			BeforeEach(func() {
+				enableRBAC = true
+			})
+
+			It("succeeds in creating a role resource", func() {
+				kubeCtl := cp.KubeCtl()
+
+				Eventually(func() error {
+					_, _, err := kubeCtl.Run("create", "-f", roleFile)
+					return err
+				}, "10s").Should(Succeed())
+			})
+		})
+	})
+
 	Context("when Stop() is called on the control plane", func() {
 		Context("but the control plane is not started yet", func() {
 			It("does not error", func() {
@@ -181,4 +269,32 @@ func isSomethingListeningOnPort(hostAndPort string) portChecker {
 		conn.Close()
 		return true
 	}
+}
+
+func tempFile() *os.File {
+	f, err := ioutil.TempFile("", "")
+	Expect(err).NotTo(HaveOccurred())
+	return f
+}
+
+func tempFileWithContent(content string) string {
+	f := tempFile()
+	_, err := io.WriteString(f, content)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(f.Close()).To(Succeed())
+	return f.Name()
+}
+
+func readAll(reader io.Reader) string {
+	content, err := ioutil.ReadAll(reader)
+	Expect(err).NotTo(HaveOccurred())
+	return string(content)
+}
+
+func getExitCode(err error) int {
+	exitErr, ok := err.(*exec.ExitError)
+	Expect(ok).To(BeTrue())
+	status, ok := exitErr.Sys().(syscall.WaitStatus)
+	Expect(ok).To(BeTrue())
+	return status.ExitStatus()
 }

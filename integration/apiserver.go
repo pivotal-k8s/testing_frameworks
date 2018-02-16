@@ -23,6 +23,8 @@ type APIServer struct {
 	// doc.go) for details.
 	Path string
 
+	EnableRBAC bool
+
 	// Args is a list of arguments which will passed to the APIServer binary.
 	// Before they are passed on, they will be evaluated as go-template strings.
 	// This means you can use fields which are defined and exported on this
@@ -94,6 +96,12 @@ func (s *APIServer) Start(etcdConnectionConfig RemoteConnectionConfig) error {
 	)
 	if err != nil {
 		return err
+	}
+	if s.EnableRBAC == true {
+		s.processState.Args = append(
+			s.processState.Args,
+			"--authorization-mode=RBAC",
+		)
 	}
 
 	return s.processState.Start(s.Out, s.Err)
