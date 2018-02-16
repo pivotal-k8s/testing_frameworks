@@ -4,7 +4,7 @@ import "net/url"
 
 var APIServerDefaultArgs = []string{
 	"--etcd-servers={{ .EtcdURL.String }}",
-	"--cert-dir={{ .CertDir }}",
+	"--cert-dir={{ .Dir }}",
 	"--insecure-port={{ .URL.Port }}",
 	"--insecure-bind-address={{ .URL.Hostname }}",
 }

@@ -33,26 +33,32 @@ type ControlPlaneComponent interface {
 
 // Start will start your control plane processes. To stop them, call Stop().
 func (f *ControlPlane) Start() error {
+	var err error
+
 	if f.Etcd == nil {
 		f.Etcd = &Etcd{}
 	}
-	if err := f.Etcd.Start(); err != nil {
+	if err = f.Etcd.Start(); err != nil {
+		return err
+	}
+	etcdConnectionConf, err := f.Etcd.ConnectionConfig()
+	if err != nil {
 		return err
 	}
 
 	if f.APIServer == nil {
 		f.APIServer = &APIServer{}
 	}
-	f.APIServer.EtcdURL = f.Etcd.URL
-	if err := f.APIServer.Start(); err != nil {
+	if err = f.APIServer.Start(etcdConnectionConf); err != nil {
+		return err
+	}
+	apiServerConnectionConf, err := f.APIServer.ConnectionConfig()
+	if err != nil {
 		return err
 	}
 
 	for _, c := range f.AdditionalComponents {
-		r := RemoteConnectionConfig{
-			URL: f.APIServer.URL,
-		}
-		if err := c.Start(r); err != nil {
+		if err := c.Start(apiServerConnectionConf); err != nil {
 			return err
 		}
 	}
@@ -83,7 +89,13 @@ func (f *ControlPlane) Stop() error {
 
 // APIURL returns the URL you should connect to to talk to your API.
 func (f *ControlPlane) APIURL() *url.URL {
-	return f.APIServer.URL
+	apiConnectionConfig, err := f.APIServer.ConnectionConfig()
+	if err != nil {
+		// TODO handle empty URL properly, catch error
+		return &url.URL{}
+	}
+
+	return apiConnectionConfig.URL
 }
 
 // KubeCtl returns a pre-configured KubeCtl, ready to connect to this

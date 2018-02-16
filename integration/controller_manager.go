@@ -1,7 +1,6 @@
 package integration
 
 import (
-	"fmt"
 	"io"
 	"net/url"
 	"time"
@@ -57,12 +56,8 @@ type ControllerManager struct {
 
 // Start starts the controller manager, waits for it to come up, and returns an
 // error, if occurred.
-func (c *ControllerManager) Start(r RemoteConnectionConfig) error {
+func (c *ControllerManager) Start(apiServerConnectionConf RemoteConnectionConfig) error {
 	var err error
-
-	if r.URL == nil {
-		return fmt.Errorf("Remote connection config must include a URL")
-	}
 
 	c.processState = &internal.ProcessState{}
 
@@ -86,7 +81,7 @@ func (c *ControllerManager) Start(r RemoteConnectionConfig) error {
 		APIServerURL *url.URL
 	}{
 		c.processState,
-		r.URL,
+		apiServerConnectionConf.URL,
 	}
 
 	c.processState.Args, err = internal.RenderTemplates(

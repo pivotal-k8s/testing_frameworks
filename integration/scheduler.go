@@ -1,7 +1,6 @@
 package integration
 
 import (
-	"fmt"
 	"io"
 	"net/url"
 	"time"
@@ -55,12 +54,8 @@ type Scheduler struct {
 
 // Start starts the scheduler, waits for it to come up, and returns an error,
 // if occurred.
-func (c *Scheduler) Start(r RemoteConnectionConfig) error {
+func (c *Scheduler) Start(apiServerConnectionConfig RemoteConnectionConfig) error {
 	var err error
-
-	if r.URL == nil {
-		return fmt.Errorf("Remote connection config must include a URL")
-	}
 
 	c.processState = &internal.ProcessState{}
 
@@ -84,7 +79,7 @@ func (c *Scheduler) Start(r RemoteConnectionConfig) error {
 		APIServerURL *url.URL
 	}{
 		c.processState,
-		r.URL,
+		apiServerConnectionConfig.URL,
 	}
 
 	c.processState.Args, err = internal.RenderTemplates(

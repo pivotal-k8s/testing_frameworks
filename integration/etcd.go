@@ -80,15 +80,15 @@ func (e *Etcd) Start() error {
 
 	e.processState.StartMessage = internal.GetEtcdStartMessage(e.processState.URL)
 
-	// TODO Do not mutate the main struct
-	e.URL = &e.processState.URL
-	// e.DataDir = e.processState.Dir
-	// e.Path = e.processState.Path
-	// e.StartTimeout = e.processState.StartTimeout
-	// e.StopTimeout = e.processState.StopTimeout
+	templateVars := struct {
+		*internal.ProcessState
+	}{
+		e.processState,
+	}
 
 	e.processState.Args, err = internal.RenderTemplates(
-		internal.DoEtcdArgDefaulting(e.Args), e,
+		internal.DoEtcdArgDefaulting(e.Args),
+		templateVars,
 	)
 	if err != nil {
 		return err
@@ -101,4 +101,8 @@ func (e *Etcd) Start() error {
 // the DataDir if necessary.
 func (e *Etcd) Stop() error {
 	return e.processState.Stop()
+}
+
+func (e *Etcd) ConnectionConfig() (RemoteConnectionConfig, error) {
+	return processStateToConnectionConfig(e.processState)
 }

@@ -2,6 +2,7 @@ package integration_tests
 
 import (
 	"bytes"
+	"io/ioutil"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -11,25 +12,19 @@ import (
 )
 
 var _ = Describe("Etcd", func() {
-	It("sets the properties after defaulting", func() {
-		etcd := &Etcd{}
+	It("uses the configured datadir", func() {
+		tmpDir, err := ioutil.TempDir("", "k8s_test_framework_")
+		Expect(err).NotTo(HaveOccurred())
 
-		Expect(etcd.URL).To(BeZero())
-		// Expect(etcd.DataDir).To(BeZero())
-		// Expect(etcd.Path).To(BeZero())
-		// Expect(etcd.StartTimeout).To(BeZero())
-		// Expect(etcd.StopTimeout).To(BeZero())
+		etcd := &Etcd{}
+		etcd.DataDir = tmpDir
 
 		Expect(etcd.Start()).To(Succeed())
 		defer func() {
 			Expect(etcd.Stop()).To(Succeed())
 		}()
 
-		Expect(etcd.URL).NotTo(BeZero())
-		// Expect(etcd.DataDir).NotTo(BeZero())
-		// Expect(etcd.Path).NotTo(BeZero())
-		// Expect(etcd.StartTimeout).NotTo(BeZero())
-		// Expect(etcd.StopTimeout).NotTo(BeZero())
+		Expect(directoryHasContents(tmpDir)).To(BeTrue())
 	})
 
 	It("can inspect IO", func() {
@@ -64,3 +59,9 @@ var _ = Describe("Etcd", func() {
 		Expect(stderr.String()).To(ContainSubstring("usage: etcd"))
 	})
 })
+
+func directoryHasContents(dir string) bool {
+	fileList, err := ioutil.ReadDir(dir)
+	Expect(err).NotTo(HaveOccurred(), "Cannot read directory %s", dir)
+	return len(fileList) != 0
+}

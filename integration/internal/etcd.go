@@ -6,7 +6,7 @@ var EtcdDefaultArgs = []string{
 	"--listen-peer-urls=http://localhost:0",
 	"--advertise-client-urls={{ .URL.String }}",
 	"--listen-client-urls={{ .URL.String }}",
-	"--data-dir={{ .DataDir }}",
+	"--data-dir={{ .Dir }}",
 }
 
 func DoEtcdArgDefaulting(args []string) []string {

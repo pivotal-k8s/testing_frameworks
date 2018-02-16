@@ -37,8 +37,11 @@ var _ = Describe("The Testing Framework", func() {
 		err = controlPlane.Start()
 		Expect(err).NotTo(HaveOccurred(), "Expected controlPlane to start successfully")
 
+		etcdConnectionConf, err := controlPlane.Etcd.ConnectionConfig()
+		Expect(err).NotTo(HaveOccurred())
+
 		apiServerURL := controlPlane.APIURL()
-		etcdClientURL := controlPlane.APIServer.EtcdURL
+		etcdClientURL := etcdConnectionConf.URL
 		controllerManagerURL := getURL(controllerManager)
 		schedulerURL := getURL(scheduler)
 
@@ -100,7 +103,10 @@ var _ = Describe("The Testing Framework", func() {
 
 			Expect(controlPlane.Start()).To(Succeed())
 
-			etcdListening := isSomethingListeningOnPort(controlPlane.Etcd.URL.Host)
+			etcdConnectionConf, err := controlPlane.Etcd.ConnectionConfig()
+			Expect(err).NotTo(HaveOccurred())
+
+			etcdListening := isSomethingListeningOnPort(etcdConnectionConf.URL.Host)
 			apiServerListening := isSomethingListeningOnPort(controlPlane.APIURL().Host)
 
 			Expect(controlPlane.AdditionalComponents).To(HaveLen(0))

@@ -13,13 +13,10 @@ type RemoteConnectionConfig struct {
 	URL *url.URL
 }
 
-func processStateToConnectionConfig(ps *internal.ProcessState) (conf RemoteConnectionConfig, err error) {
+func processStateToConnectionConfig(ps *internal.ProcessState) (RemoteConnectionConfig, error) {
 	if ps.URL == (url.URL{}) {
-		err = fmt.Errorf("Scheduler has not bound to an URL yet; did you call Start()?")
-		return
+		return RemoteConnectionConfig{}, fmt.Errorf("Scheduler has not bound to an URL yet; did you call Start()?")
 	}
 
-	conf.URL = &ps.URL
-
-	return
+	return RemoteConnectionConfig{URL: &ps.URL}, nil
 }

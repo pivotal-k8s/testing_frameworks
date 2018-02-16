@@ -42,11 +42,6 @@ type APIServer struct {
 	// directory, and the Stop() method will clean it up.
 	CertDir string
 
-	// EtcdURL is the URL of the Etcd the APIServer should use.
-	//
-	// If this is not specified, the Start() method will return an error.
-	EtcdURL *url.URL
-
 	// StartTimeout, StopTimeout specify the time the APIServer is allowed to
 	// take when starting and stoppping before an error is emitted.
 	//
@@ -65,7 +60,7 @@ type APIServer struct {
 
 // Start starts the apiserver, waits for it to come up, and returns an error,
 // if occurred.
-func (s *APIServer) Start() error {
+func (s *APIServer) Start(etcdConnectionConfig RemoteConnectionConfig) error {
 	var err error
 
 	s.processState = &internal.ProcessState{}
@@ -85,15 +80,17 @@ func (s *APIServer) Start() error {
 
 	s.processState.StartMessage = internal.GetAPIServerStartMessage(s.processState.URL)
 
-	// TODO Do not mutate main struct
-	s.URL = &s.processState.URL
-	// s.CertDir = s.processState.Dir
-	// s.Path = s.processState.Path
-	// s.StartTimeout = s.processState.StartTimeout
-	// s.StopTimeout = s.processState.StopTimeout
+	templateVars := struct {
+		EtcdURL *url.URL
+		*internal.ProcessState
+	}{
+		etcdConnectionConfig.URL,
+		s.processState,
+	}
 
 	s.processState.Args, err = internal.RenderTemplates(
-		internal.DoAPIServerArgDefaulting(s.Args), s,
+		internal.DoAPIServerArgDefaulting(s.Args),
+		templateVars,
 	)
 	if err != nil {
 		return err
@@ -106,4 +103,8 @@ func (s *APIServer) Start() error {
 // the CertDir if necessary.
 func (s *APIServer) Stop() error {
 	return s.processState.Stop()
+}
+
+func (s *APIServer) ConnectionConfig() (RemoteConnectionConfig, error) {
+	return processStateToConnectionConfig(s.processState)
 }

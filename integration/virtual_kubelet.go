@@ -60,12 +60,8 @@ type VirtualKubelet struct {
 
 // Start starts the virtual kubelet, waits for it to come up, and returns an
 // error, if one occoured.
-func (vk *VirtualKubelet) Start(r RemoteConnectionConfig) error {
+func (vk *VirtualKubelet) Start(apiServerConnectionConfig RemoteConnectionConfig) error {
 	var err error
-
-	if r.URL == nil {
-		return fmt.Errorf("Remote connection config must include a URL")
-	}
 
 	vk.processState = &internal.ProcessState{}
 
@@ -99,7 +95,7 @@ func (vk *VirtualKubelet) Start(r RemoteConnectionConfig) error {
 	}
 
 	confPath := path.Join(vk.processState.Dir, "kube.conf")
-	if err := writeCubeConfig(confPath, r.URL); err != nil {
+	if err := writeCubeConfig(confPath, apiServerConnectionConfig.URL); err != nil {
 		return err
 	}
 
