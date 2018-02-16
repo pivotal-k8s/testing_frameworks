@@ -80,11 +80,12 @@ func (e *Etcd) Start() error {
 
 	e.processState.StartMessage = internal.GetEtcdStartMessage(e.processState.URL)
 
+	// TODO Do not mutate the main struct
 	e.URL = &e.processState.URL
-	e.DataDir = e.processState.Dir
-	e.Path = e.processState.Path
-	e.StartTimeout = e.processState.StartTimeout
-	e.StopTimeout = e.processState.StopTimeout
+	// e.DataDir = e.processState.Dir
+	// e.Path = e.processState.Path
+	// e.StartTimeout = e.processState.StartTimeout
+	// e.StopTimeout = e.processState.StopTimeout
 
 	e.processState.Args, err = internal.RenderTemplates(
 		internal.DoEtcdArgDefaulting(e.Args), e,

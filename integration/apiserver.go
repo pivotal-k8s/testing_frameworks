@@ -85,11 +85,12 @@ func (s *APIServer) Start() error {
 
 	s.processState.StartMessage = internal.GetAPIServerStartMessage(s.processState.URL)
 
+	// TODO Do not mutate main struct
 	s.URL = &s.processState.URL
-	s.CertDir = s.processState.Dir
-	s.Path = s.processState.Path
-	s.StartTimeout = s.processState.StartTimeout
-	s.StopTimeout = s.processState.StopTimeout
+	// s.CertDir = s.processState.Dir
+	// s.Path = s.processState.Path
+	// s.StartTimeout = s.processState.StartTimeout
+	// s.StopTimeout = s.processState.StopTimeout
 
 	s.processState.Args, err = internal.RenderTemplates(
 		internal.DoAPIServerArgDefaulting(s.Args), s,
