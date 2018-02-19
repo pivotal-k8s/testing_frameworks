@@ -115,9 +115,6 @@ var VirtualKubeletDefaultArgs = []string{
 	"--kubeconfig={{ .Dir }}/kube.conf",
 }
 
-// TODO The following is temporary. Eventually this should all be generated
-//      from the RemoteConnectionConfig / rest.Config
-
 func writeCubeConfig(kubeConfPath string, apiServerURL *url.URL) error {
 	var err error
 	var file *os.File
