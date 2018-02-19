@@ -87,7 +87,7 @@ func (vk *VirtualKubelet) Start(apiServerConnectionConfig RemoteConnectionConfig
 	}
 
 	vk.processState.Args, err = internal.RenderTemplates(
-		vk.doArgDefaulting(),
+		doArgDefaulting(vk.Args, VirtualKubeletDefaultArgs),
 		templateVars,
 	)
 	if err != nil {
@@ -112,14 +112,6 @@ func (vk *VirtualKubelet) Stop() error {
 // VirtualKubelet.
 func (vk *VirtualKubelet) ConnectionConfig() (RemoteConnectionConfig, error) {
 	return RemoteConnectionConfig{}, nil
-}
-
-func (vk *VirtualKubelet) doArgDefaulting() []string {
-	if len(vk.Args) != 0 {
-		return vk.Args
-	}
-
-	return VirtualKubeletDefaultArgs
 }
 
 // VirtualKubeletDefaultArgs is the default set of arguments that get passed

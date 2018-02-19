@@ -83,7 +83,7 @@ func (s *Scheduler) Start(apiServerConnectionConfig RemoteConnectionConfig) erro
 	}
 
 	s.processState.Args, err = internal.RenderTemplates(
-		s.doArgDefaulting(),
+		doArgDefaulting(s.Args, SchedulerDefaultArgs),
 		templateVars,
 	)
 	if err != nil {
@@ -102,14 +102,6 @@ func (s *Scheduler) Stop() error {
 // Scheduler.
 func (s *Scheduler) ConnectionConfig() (conf RemoteConnectionConfig, err error) {
 	return processStateToConnectionConfig(s.processState)
-}
-
-func (s *Scheduler) doArgDefaulting() []string {
-	if len(s.Args) != 0 {
-		return s.Args
-	}
-
-	return SchedulerDefaultArgs
 }
 
 // SchedulerDefaultArgs is the default set of arguments that get passed to the
