@@ -9,13 +9,13 @@ needed to provide this API is managed by this framework.
 Quickstart
 
 If you want to test a kubernetes client against the latest kubernetes APIServer
-and Etcd, you can use `./scripts/download-binaries.sh` to download APIServer
-and Etcd binaries for your platform. Then add something like the following to
-your tests:
+and Etcd, you can use `./scripts/download-binaries.sh` to download APIServer and
+Etcd binaries for your platform. Then add something like the
+following to your tests:
 
 	cp := &integration.ControlPlane{}
 	cp.Start()
-	kubeCtl := cp.KubeCtl()
+	kubeCtl, err := cp.KubeCtl()
 	stdout, stderr, err := kubeCtl.Run("get", "pods")
 	// You can check on err, stdout & stderr and build up
 	// your tests
@@ -73,14 +73,31 @@ that:
 
 Binaries
 
-Etcd, APIServer & KubeCtl use the same mechanism to determine which binaries to
-use when they get started.
+The framework uses the same mechanism to determine which binaries to
+use when starting components.
 
-1. If the component is configured with a `Path` the framework tries to run that
-binary.
+For convenience this framework ships with
+`${FRAMEWORK_DIR}/scripts/download-binaries.sh` which can be used to download
+pre-compiled versions of the needed binaries and place them in the default
+location (`${FRAMEWORK_DIR}/assets/bin/`).
+
+1. By default the framework expects to find the binaries in the directory
+`${FRAMEWORK_DIR}/assets/bin/`.
+
+2. The path to a binary can be configured using an environment variable:
+
+	$TEST_ASSET_KUBE_APISERVER
+	$TEST_ASSET_ETCD
+	$TEST_ASSET_KUBECTL
+	$TEST_ASSET_KUBE_SCHEDULER
+	$TEST_ASSET_KUBE_CONTROLLER_MANAGER
+	$TEST_ASSET_VIRTUAL_KUBELET
+
+3. Alternatively, the path to a binary can be configured using the `Path` field
+on the component struct.
 For example:
 
-	myEtcd := &Etcd{
+	myEtcd := &integration.Etcd{
 		Path: "/some/other/etcd",
 	}
 	cp := &integration.ControlPlane{
@@ -88,47 +105,22 @@ For example:
 	}
 	cp.Start()
 
-2. If the Path field on APIServer, Etcd or KubeCtl is left unset and an
-environment variable named `TEST_ASSET_KUBE_APISERVER`, `TEST_ASSET_ETCD` or
-`TEST_ASSET_KUBECTL` is set, its value is used as a path to the binary for the
-APIServer, Etcd or KubeCtl.
+Custom Arguments for Components
 
-3. If neither the `Path` field, nor the environment variable is set, the
-framework tries to use the binaries `kube-apiserver`, `etcd` or `kubectl` in
-the directory `${FRAMEWORK_DIR}/assets/bin/`.
+All components will start with default arguments. These can be customised by
+setting the `Args` field on the component struct.
 
-For convenience this framework ships with
-`${FRAMEWORK_DIR}/scripts/download-binaries.sh` which can be used to download
-pre-compiled versions of the needed binaries and place them in the default
-location (`${FRAMEWORK_DIR}/assets/bin/`).
-
-Arguments for Etcd and APIServer
-
-Those components will start without any configuration. However, if you want our
-need to, you can override certain configuration -- one of which are the
-arguments used when calling the binary.
-
-When you choose to specify your own set of arguments, those won't be appended
-to the default set of arguments, it is your responsibility to provide all the
-arguments needed for the binary to start successfully.
+The default arguments are available as package variables. Therefore, you can
+use them in your test set up, e.g. appending to them.
 
 All arguments are interpreted as go templates. Those templates have access to
-all exported fields of the `APIServer`/`Etcd` struct. It does not matter if
-those fields where explicitly set up or if they were defaulted by calling the
-`Start()` method, the template evaluation runs just before the binary is
-executed and right after the defaulting of all the struct's fields has
-happened.
+some fields depending on the struct. The templates are evaluated just before
+the binary is executed.
 
-	// All arguments needed for a successful start must be specified
-	etcdArgs := []string{
-		"--listen-peer-urls=http://localhost:0",
-		"--advertise-client-urls={{ .URL.String }}",
-		"--listen-client-urls={{ .URL.String }}",
-		"--data-dir={{ .DataDir }}",
-		// add some custom arguments
-		"--this-is-my-very-important-custom-argument",
-		"--arguments-dont-have-to-be-templates=but they can",
-	}
+	etcdArgs := append(integration.APIServerDefaultArgs, []string{
+		"--debug",
+		"--wal-dir={{ .Dir }}/etcd_wals/",
+	})
 
 	etcd := &Etcd{
 		Args:    etcdArgs,
