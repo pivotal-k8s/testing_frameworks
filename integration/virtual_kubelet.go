@@ -108,12 +108,6 @@ func (vk *VirtualKubelet) Stop() error {
 	return vk.processState.Stop()
 }
 
-// ConnectionConfig returns the configuration needed to connect to this
-// VirtualKubelet.
-func (vk *VirtualKubelet) ConnectionConfig() (RemoteConnectionConfig, error) {
-	return RemoteConnectionConfig{}, nil
-}
-
 // VirtualKubeletDefaultArgs is the default set of arguments that get passed
 // to the VirtualKubelet binary.
 var VirtualKubeletDefaultArgs = []string{
