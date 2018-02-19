@@ -42,14 +42,14 @@ type VirtualKubelet struct {
 	// directory, and the Stop() method will clean it up.
 	ConfDir string
 
-	// StartTimeout, StopTimeout specify the time the APIServer is allowed to
-	// take when starting and stoppping before an error is emitted.
+	// StartTimeout, StopTimeout specify the time the VirtualKubelet is allowed
+	// to take when starting and stopping before an error is emitted.
 	//
 	// If not specified, these default to 20 seconds.
 	StartTimeout time.Duration
 	StopTimeout  time.Duration
 
-	// Out, Err specify where APIServer should write its StdOut, StdErr to.
+	// Out, Err specify where VirtualKubelet should write its StdOut, StdErr to.
 	//
 	// If not specified, the output will be discarded.
 	Out io.Writer
@@ -108,6 +108,8 @@ func (vk *VirtualKubelet) Stop() error {
 	return vk.processState.Stop()
 }
 
+// ConnectionConfig returns the configuration needed to connect to this
+// VirtualKubelet.
 func (vk *VirtualKubelet) ConnectionConfig() (RemoteConnectionConfig, error) {
 	return RemoteConnectionConfig{}, nil
 }

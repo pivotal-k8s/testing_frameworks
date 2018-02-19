@@ -9,7 +9,7 @@ import (
 //
 // A minimal control plane consists of an Etcd and an APIServer.
 //
-// Additionall control plane components can be added as `AdditionalComponents`.
+// Additional control plane components can be added as `AdditionalComponents`.
 // These will be started and stopped with the control plane when it is brought
 // up and teared down.
 type ControlPlane struct {

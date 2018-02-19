@@ -36,14 +36,14 @@ type Scheduler struct {
 	// be used.
 	Args []string
 
-	// StartTimeout, StopTimeout specify the time the APIServer is allowed to
-	// take when starting and stoppping before an error is emitted.
+	// StartTimeout, StopTimeout specify the time the Scheduler is allowed to
+	// take when starting and stopping before an error is emitted.
 	//
 	// If not specified, these default to 20 seconds.
 	StartTimeout time.Duration
 	StopTimeout  time.Duration
 
-	// Out, Err specify where APIServer should write its StdOut, StdErr to.
+	// Out, Err specify where Scheduler should write its StdOut, StdErr to.
 	//
 	// If not specified, the output will be discarded.
 	Out io.Writer
@@ -98,6 +98,8 @@ func (c *Scheduler) Stop() error {
 	return c.processState.Stop()
 }
 
+// ConnectionConfig returns the configuration needed to connect to this
+// Scheduler.
 func (c *Scheduler) ConnectionConfig() (conf RemoteConnectionConfig, err error) {
 	return processStateToConnectionConfig(c.processState)
 }
