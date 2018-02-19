@@ -2,21 +2,6 @@ package internal
 
 import "net/url"
 
-var EtcdDefaultArgs = []string{
-	"--listen-peer-urls=http://localhost:0",
-	"--advertise-client-urls={{ .URL.String }}",
-	"--listen-client-urls={{ .URL.String }}",
-	"--data-dir={{ .Dir }}",
-}
-
-func DoEtcdArgDefaulting(args []string) []string {
-	if len(args) != 0 {
-		return args
-	}
-
-	return EtcdDefaultArgs
-}
-
 func isSecureScheme(scheme string) bool {
 	// https://github.com/coreos/etcd/blob/d9deeff49a080a88c982d328ad9d33f26d1ad7b6/pkg/transport/listener.go#L53
 	if scheme == "https" || scheme == "unixs" {

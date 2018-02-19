@@ -87,7 +87,7 @@ func (e *Etcd) Start() error {
 	}
 
 	e.processState.Args, err = internal.RenderTemplates(
-		internal.DoEtcdArgDefaulting(e.Args),
+		doArgDefaulting(e.Args, EtcdDefaultArgs),
 		templateVars,
 	)
 	if err != nil {
@@ -105,4 +105,13 @@ func (e *Etcd) Stop() error {
 
 func (e *Etcd) ConnectionConfig() (RemoteConnectionConfig, error) {
 	return processStateToConnectionConfig(e.processState)
+}
+
+// EtcdDefaultArgs is the default set of arguments that get passed to the Etcd
+// binary.
+var EtcdDefaultArgs = []string{
+	"--listen-peer-urls=http://localhost:0",
+	"--advertise-client-urls={{ .URL.String }}",
+	"--listen-client-urls={{ .URL.String }}",
+	"--data-dir={{ .Dir }}",
 }
