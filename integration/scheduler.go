@@ -54,59 +54,59 @@ type Scheduler struct {
 
 // Start starts the scheduler, waits for it to come up, and returns an error,
 // if occurred.
-func (c *Scheduler) Start(apiServerConnectionConfig RemoteConnectionConfig) error {
+func (s *Scheduler) Start(apiServerConnectionConfig RemoteConnectionConfig) error {
 	var err error
 
-	c.processState = &internal.ProcessState{}
+	s.processState = &internal.ProcessState{}
 
-	c.processState.DefaultedProcessInput, err = internal.DoDefaulting(
+	s.processState.DefaultedProcessInput, err = internal.DoDefaulting(
 		"kube-scheduler",
-		c.URL,
+		s.URL,
 		"",
 		false,
-		c.Path,
-		c.StartTimeout,
-		c.StopTimeout,
+		s.Path,
+		s.StartTimeout,
+		s.StopTimeout,
 	)
 	if err != nil {
 		return err
 	}
 
-	c.processState.StartMessage = "starting healthz server on"
+	s.processState.StartMessage = "starting healthz server on"
 
 	templateVars := struct {
 		*internal.ProcessState
 		APIServerURL *url.URL
 	}{
-		c.processState,
+		s.processState,
 		apiServerConnectionConfig.URL,
 	}
 
-	c.processState.Args, err = internal.RenderTemplates(
-		c.doArgDefaulting(),
+	s.processState.Args, err = internal.RenderTemplates(
+		s.doArgDefaulting(),
 		templateVars,
 	)
 	if err != nil {
 		return err
 	}
 
-	return c.processState.Start(c.Out, c.Err)
+	return s.processState.Start(s.Out, s.Err)
 }
 
 // Stop stops this process gracefully, waits for its termination.
-func (c *Scheduler) Stop() error {
-	return c.processState.Stop()
+func (s *Scheduler) Stop() error {
+	return s.processState.Stop()
 }
 
 // ConnectionConfig returns the configuration needed to connect to this
 // Scheduler.
-func (c *Scheduler) ConnectionConfig() (conf RemoteConnectionConfig, err error) {
-	return processStateToConnectionConfig(c.processState)
+func (s *Scheduler) ConnectionConfig() (conf RemoteConnectionConfig, err error) {
+	return processStateToConnectionConfig(s.processState)
 }
 
-func (c *Scheduler) doArgDefaulting() []string {
-	if len(c.Args) != 0 {
-		return c.Args
+func (s *Scheduler) doArgDefaulting() []string {
+	if len(s.Args) != 0 {
+		return s.Args
 	}
 
 	return SchedulerDefaultArgs
