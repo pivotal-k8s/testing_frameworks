@@ -9,7 +9,7 @@ import (
 	. "github.com/kubernetes-sig-testing/frameworks/integration/internal"
 )
 
-var _ = Describe("Arguments", func() {
+var _ = Describe("Template rendering", func() {
 	It("templates URLs", func() {
 		templates := []string{
 			"plain URL: {{ .SomeURL }}",
