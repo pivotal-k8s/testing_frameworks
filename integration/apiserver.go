@@ -89,7 +89,7 @@ func (s *APIServer) Start(etcdConnectionConfig RemoteConnectionConfig) error {
 	}
 
 	s.processState.Args, err = internal.RenderTemplates(
-		internal.DoAPIServerArgDefaulting(s.Args),
+		s.doArgDefaulting(),
 		templateVars,
 	)
 	if err != nil {
@@ -107,4 +107,20 @@ func (s *APIServer) Stop() error {
 
 func (s *APIServer) ConnectionConfig() (RemoteConnectionConfig, error) {
 	return processStateToConnectionConfig(s.processState)
+}
+
+func (s *APIServer) doArgDefaulting() []string {
+	if len(s.Args) != 0 {
+		return s.Args
+	}
+
+	return APIServerDefaultArgs
+}
+
+// APIServerDefaultArgs is the default set of arguments that get passed to the APIServer binary.
+var APIServerDefaultArgs = []string{
+	"--etcd-servers={{ .EtcdURL.String }}",
+	"--cert-dir={{ .Dir }}",
+	"--insecure-port={{ .URL.Port }}",
+	"--insecure-bind-address={{ .URL.Hostname }}",
 }
