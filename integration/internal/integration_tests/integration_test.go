@@ -163,7 +163,11 @@ var _ = Describe("The Testing Framework", func() {
 	}, 10)
 })
 
-func getURL(c integration.ControlPlaneComponent) *url.URL {
+type connectableControlPlaneComponent interface {
+	ConnectionConfig() (integration.RemoteConnectionConfig, error)
+}
+
+func getURL(c connectableControlPlaneComponent) *url.URL {
 	r, err := c.ConnectionConfig()
 	Expect(err).NotTo(HaveOccurred())
 	return r.URL

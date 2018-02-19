@@ -22,13 +22,11 @@ type ControlPlane struct {
 // control plane.
 //
 // It is the responsibility of a component to configure itself to be part
-// of the control plane. This can be done in `RegisterTo()` method. This method
-// is passing the control plane in question, so the component has access to the
-// control it should connect to and can query it for the configuration needed.
+// of the control plane. This can be done in the `Start()` method. This method
+// is passing the remote connection config for the API Server.
 type ControlPlaneComponent interface {
 	Start(RemoteConnectionConfig) error
 	Stop() error
-	ConnectionConfig() (RemoteConnectionConfig, error)
 }
 
 // Start will start your control plane processes. To stop them, call Stop().
