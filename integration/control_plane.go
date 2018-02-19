@@ -1,8 +1,8 @@
 package integration
 
 import (
+	"errors"
 	"fmt"
-	"net/url"
 )
 
 // ControlPlane is a struct that knows how to start your test control plane.
@@ -85,21 +85,24 @@ func (f *ControlPlane) Stop() error {
 	return nil
 }
 
-// APIURL returns the URL you should connect to to talk to your API.
-func (f *ControlPlane) APIURL() *url.URL {
-	apiConnectionConfig, err := f.APIServer.ConnectionConfig()
-	if err != nil {
-		// TODO handle empty URL properly, catch error
-		return &url.URL{}
+// ConnectionConfig returns the connection config to connect to the API Server
+// of the ControlPlane.
+func (f *ControlPlane) ConnectionConfig() (RemoteConnectionConfig, error) {
+	if f.APIServer == nil {
+		return RemoteConnectionConfig{},
+			errors.New("control plane has no APIServer; did you call Start()?")
 	}
-
-	return apiConnectionConfig.URL
+	return f.APIServer.ConnectionConfig()
 }
 
 // KubeCtl returns a pre-configured KubeCtl, ready to connect to this
 // ControlPlane.
-func (f *ControlPlane) KubeCtl() *KubeCtl {
+func (f *ControlPlane) KubeCtl() (*KubeCtl, error) {
 	k := &KubeCtl{}
-	k.Opts = append(k.Opts, fmt.Sprintf("--server=%s", f.APIURL()))
-	return k
+	config, err := f.ConnectionConfig()
+	if err != nil {
+		return nil, err
+	}
+	k.Opts = append(k.Opts, fmt.Sprintf("--server=%s", config.URL))
+	return k, nil
 }

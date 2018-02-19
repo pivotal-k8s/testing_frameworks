@@ -10,7 +10,7 @@ import (
 )
 
 var _ = Describe("processStateToConnectionConfig", func() {
-	It("genrates a proper RemoteConnectionConfig", func() {
+	It("generates a proper RemoteConnectionConfig", func() {
 		ps := &internal.ProcessState{}
 		ps.URL = url.URL{Scheme: "http", Host: "some.host.tld"}
 
@@ -25,6 +25,13 @@ var _ = Describe("processStateToConnectionConfig", func() {
 
 			_, err := processStateToConnectionConfig(ps)
 			Expect(err).To(MatchError(ContainSubstring("not bound to an URL yet")))
+		})
+	})
+
+	Context("when there is no process state", func() {
+		It("returns a error", func() {
+			_, err := processStateToConnectionConfig(nil)
+			Expect(err).To(MatchError(ContainSubstring("no process state")))
 		})
 	})
 })

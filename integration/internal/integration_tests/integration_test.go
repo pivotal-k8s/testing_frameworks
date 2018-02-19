@@ -37,11 +37,8 @@ var _ = Describe("The Testing Framework", func() {
 		err = controlPlane.Start()
 		Expect(err).NotTo(HaveOccurred(), "Expected controlPlane to start successfully")
 
-		etcdConnectionConf, err := controlPlane.Etcd.ConnectionConfig()
-		Expect(err).NotTo(HaveOccurred())
-
-		apiServerURL := controlPlane.APIURL()
-		etcdClientURL := etcdConnectionConf.URL
+		apiServerURL := getURL(controlPlane)
+		etcdClientURL := getURL(controlPlane.Etcd)
 		controllerManagerURL := getURL(controllerManager)
 		schedulerURL := getURL(scheduler)
 
@@ -67,7 +64,8 @@ var _ = Describe("The Testing Framework", func() {
 			fmt.Sprintf("Expected Scheduler to listen on %s", schedulerURL.Host))
 
 		By("Getting a kubectl & run it against the control plane")
-		kubeCtl := controlPlane.KubeCtl()
+		kubeCtl, err := controlPlane.KubeCtl()
+		Expect(err).NotTo(HaveOccurred())
 		stdout, stderr, err := kubeCtl.Run("get", "nodes")
 		Expect(err).NotTo(HaveOccurred())
 		errBytes, err := ioutil.ReadAll(stderr)
@@ -103,11 +101,8 @@ var _ = Describe("The Testing Framework", func() {
 
 			Expect(controlPlane.Start()).To(Succeed())
 
-			etcdConnectionConf, err := controlPlane.Etcd.ConnectionConfig()
-			Expect(err).NotTo(HaveOccurred())
-
-			etcdListening := isSomethingListeningOnPort(etcdConnectionConf.URL.Host)
-			apiServerListening := isSomethingListeningOnPort(controlPlane.APIURL().Host)
+			etcdListening := isSomethingListeningOnPort(getURL(controlPlane.Etcd).Host)
+			apiServerListening := isSomethingListeningOnPort(getURL(controlPlane).Host)
 
 			Expect(controlPlane.AdditionalComponents).To(HaveLen(0))
 			Expect(etcdListening()).To(BeTrue())
@@ -150,6 +145,26 @@ var _ = Describe("The Testing Framework", func() {
 			Expect(controlPlane.APIServer).To(BeIdenticalTo(myAPIServer))
 			Expect(controlPlane.Etcd.StartTimeout).To(Equal(15 * time.Second))
 			Expect(controlPlane.APIServer.StopTimeout).To(Equal(16 * time.Second))
+		})
+	})
+
+	Context("when the control plane is not started yet", func() {
+		It("fails to create a kubectl", func() {
+			cp := &integration.ControlPlane{}
+
+			_, err := cp.KubeCtl()
+			Expect(err).To(MatchError("control plane has no APIServer; did you call Start()?"))
+		})
+
+		Context("with a custom APIServer", func() {
+			It("fails to create a kubectl", func() {
+				cp := &integration.ControlPlane{
+					APIServer: &integration.APIServer{},
+				}
+
+				_, err := cp.KubeCtl()
+				Expect(err).To(MatchError(ContainSubstring("no process state")))
+			})
 		})
 	})
 
