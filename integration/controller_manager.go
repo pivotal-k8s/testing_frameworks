@@ -86,7 +86,7 @@ func (c *ControllerManager) Start(apiServerConnectionConf RemoteConnectionConfig
 	}
 
 	c.processState.Args, err = internal.RenderTemplates(
-		internal.DoControllerManagerArgDefaulting(c.Args),
+		c.doArgDefaulting(),
 		templateVars,
 	)
 	if err != nil {
@@ -105,4 +105,20 @@ func (c *ControllerManager) Stop() error {
 // ControllerManager.
 func (c *ControllerManager) ConnectionConfig() (RemoteConnectionConfig, error) {
 	return processStateToConnectionConfig(c.processState)
+}
+
+func (c *ControllerManager) doArgDefaulting() []string {
+	if len(c.Args) != 0 {
+		return c.Args
+	}
+
+	return ControllerManagerDefaultArgs
+}
+
+// ControllerManagerDefaultArgs  is the default set of arguments that get
+// passed to the ControllerManager binary.
+var ControllerManagerDefaultArgs = []string{
+	"--master={{ .APIServerURL.String }}",
+	"--port={{ .URL.Port }}",
+	"--address={{ .URL.Hostname }}",
 }
