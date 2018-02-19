@@ -87,7 +87,7 @@ func (vk *VirtualKubelet) Start(apiServerConnectionConfig RemoteConnectionConfig
 	}
 
 	vk.processState.Args, err = internal.RenderTemplates(
-		internal.DoVirtualKubeletArgDefaulting(vk.Args),
+		vk.doArgDefaulting(),
 		templateVars,
 	)
 	if err != nil {
@@ -112,6 +112,21 @@ func (vk *VirtualKubelet) Stop() error {
 // VirtualKubelet.
 func (vk *VirtualKubelet) ConnectionConfig() (RemoteConnectionConfig, error) {
 	return RemoteConnectionConfig{}, nil
+}
+
+func (vk *VirtualKubelet) doArgDefaulting() []string {
+	if len(vk.Args) != 0 {
+		return vk.Args
+	}
+
+	return VirtualKubeletDefaultArgs
+}
+
+// VirtualKubeletDefaultArgs is the default set of arguments that get passed
+// to the VirtualKubelet binary.
+var VirtualKubeletDefaultArgs = []string{
+	"--provider=mock",
+	"--kubeconfig={{ .Dir }}/kube.conf",
 }
 
 // TODO The following is temporary. Eventually this should all be generated
