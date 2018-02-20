@@ -2,18 +2,11 @@
 set -eu
 
 # Use DEBUG=1 ./scripts/download-binaries.sh to get debug output
-quiet="-s"
+quiet="-s -S"
 [[ -z "${DEBUG:-""}" ]] || {
   set -x
   quiet=""
 }
-
-logEnd() {
-  local msg='done.'
-  [ "$1" -eq 0 ] || msg='Error downloading assets'
-  echo "$msg"
-}
-trap 'logEnd $?' EXIT
 
 # Use BASE_URL=https://my/binaries/url ./scripts/download-binaries to download
 # from a different bucket
