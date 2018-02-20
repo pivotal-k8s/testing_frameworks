@@ -13,11 +13,11 @@ var _ = Describe("BinPathFinder", func() {
 			previousAssetsPath string
 		)
 		BeforeEach(func() {
-			previousAssetsPath = assetsPath
-			assetsPath = "/some/path/assets/bin"
+			previousAssetsPath = defaultAssetsPath
+			defaultAssetsPath = "/some/path/assets/bin"
 		})
 		AfterEach(func() {
-			assetsPath = previousAssetsPath
+			defaultAssetsPath = previousAssetsPath
 		})
 		It("returns the default path when no env var is configured", func() {
 			binPath := BinPathFinder("some_bin")
@@ -25,7 +25,37 @@ var _ = Describe("BinPathFinder", func() {
 		})
 	})
 
-	Context("when environment is configured", func() {
+	Context("when a custom assets directory is configured", func() {
+		BeforeEach(func() {
+			os.Setenv("TEST_ASSETS_PATH", "/custom/assets/dir")
+		})
+
+		AfterEach(func() {
+			os.Unsetenv("TEST_ASSETS_PATH")
+		})
+
+		It("returns the path to a binary in the custom assets directory", func() {
+			binPath := BinPathFinder("some_bin")
+			Expect(binPath).To(Equal("/custom/assets/dir/some_bin"))
+		})
+
+		Context("and a custom binary path is configured", func() {
+			BeforeEach(func() {
+				os.Setenv("TEST_ASSET_SOME_BIN", "/custom/path/to/some_bin")
+			})
+
+			AfterEach(func() {
+				os.Unsetenv("TEST_ASSET_SOME_BIN")
+			})
+
+			It("returns the custom binary path", func() {
+				binPath := BinPathFinder("some_bin")
+				Expect(binPath).To(Equal("/custom/path/to/some_bin"))
+			})
+		})
+	})
+
+	Context("when a binary environment variable is configured", func() {
 		var (
 			previousValue string
 			wasSet        bool
