@@ -111,7 +111,7 @@ func (e *Etcd) ConnectionConfig() (RemoteConnectionConfig, error) {
 // binary.
 var EtcdDefaultArgs = []string{
 	"--listen-peer-urls=http://localhost:0",
-	"--advertise-client-urls={{ .URL.String }}",
-	"--listen-client-urls={{ .URL.String }}",
+	"--advertise-client-urls={{ if .URL }}{{ .URL.String }}{{ end }}",
+	"--listen-client-urls={{ if .URL }}{{ .URL.String }}{{ end }}",
 	"--data-dir={{ .Dir }}",
 }

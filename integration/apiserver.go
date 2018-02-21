@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"errors"
 	"io"
 	"net/url"
 	"time"
@@ -62,6 +63,9 @@ type APIServer struct {
 // if occurred.
 func (s *APIServer) Start(etcdConnectionConfig RemoteConnectionConfig) error {
 	var err error
+	if etcdConnectionConfig.URL == nil {
+		return errors.New("expected Etcd URL to be configured")
+	}
 
 	s.processState = &internal.ProcessState{}
 
@@ -112,8 +116,9 @@ func (s *APIServer) ConnectionConfig() (RemoteConnectionConfig, error) {
 // APIServerDefaultArgs is the default set of arguments that get passed to the
 // APIServer binary.
 var APIServerDefaultArgs = []string{
-	"--etcd-servers={{ .EtcdURL.String }}",
+	"--etcd-servers={{ if .EtcdURL }}{{ .EtcdURL.String }}{{ end }}",
 	"--cert-dir={{ .Dir }}",
-	"--insecure-port={{ .URL.Port }}",
-	"--insecure-bind-address={{ .URL.Hostname }}",
+	"--insecure-port={{ if .URL }}{{ .URL.Port }}{{ end }}",
+	"--insecure-bind-address={{ if .URL }}{{ .URL.Hostname }}{{ end }}",
+	"--secure-port=0",
 }
