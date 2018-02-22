@@ -10,7 +10,8 @@ import (
 // RemoteConnectionConfig is a struct holding certain configuration items
 // describing how to connect to a remote endpoint.
 type RemoteConnectionConfig struct {
-	URL *url.URL
+	URL       *url.URL
+	SecureURL *url.URL
 }
 
 func processStateToConnectionConfig(ps *internal.ProcessState) (RemoteConnectionConfig, error) {

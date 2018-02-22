@@ -2,6 +2,7 @@ package integration
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/url"
 	"time"
@@ -57,6 +58,7 @@ type APIServer struct {
 	Err io.Writer
 
 	processState *internal.ProcessState
+	secureURL    *url.URL
 }
 
 // Start starts the apiserver, waits for it to come up, and returns an error,
@@ -84,12 +86,24 @@ func (s *APIServer) Start(etcdConnectionConfig RemoteConnectionConfig) error {
 
 	s.processState.StartMessage = internal.GetAPIServerStartMessage(s.processState.URL)
 
+	am := &internal.AddressManager{}
+	port, host, err := am.Initialize()
+	if err != nil {
+		return err
+	}
+	s.secureURL = &url.URL{
+		Scheme: "https",
+		Host:   fmt.Sprintf("%s:%d", host, port),
+	}
+
 	templateVars := struct {
 		EtcdURL *url.URL
 		*internal.ProcessState
+		SecureURL *url.URL
 	}{
 		etcdConnectionConfig.URL,
 		s.processState,
+		s.secureURL,
 	}
 
 	s.processState.Args, err = internal.RenderTemplates(
@@ -110,7 +124,12 @@ func (s *APIServer) Stop() error {
 }
 
 func (s *APIServer) ConnectionConfig() (RemoteConnectionConfig, error) {
-	return processStateToConnectionConfig(s.processState)
+	config, err := processStateToConnectionConfig(s.processState)
+	if err != nil {
+		return RemoteConnectionConfig{}, err
+	}
+	config.SecureURL = s.secureURL
+	return config, nil
 }
 
 // APIServerDefaultArgs is the default set of arguments that get passed to the
@@ -120,5 +139,7 @@ var APIServerDefaultArgs = []string{
 	"--cert-dir={{ .Dir }}",
 	"--insecure-port={{ if .URL }}{{ .URL.Port }}{{ end }}",
 	"--insecure-bind-address={{ if .URL }}{{ .URL.Hostname }}{{ end }}",
-	"--secure-port=0",
+	"--secure-port={{ if .SecureURL }}{{ .SecureURL.Port }}{{ end }}",
+	"--bind-address=0.0.0.0",
+	"--authorization-mode=RBAC",
 }

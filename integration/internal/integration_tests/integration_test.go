@@ -2,6 +2,7 @@ package integration_tests
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -37,13 +38,19 @@ var _ = Describe("The Testing Framework", func() {
 		err = controlPlane.Start()
 		Expect(err).NotTo(HaveOccurred(), "Expected controlPlane to start successfully")
 
-		apiServerURL := getURL(controlPlane)
+		// apiServerURL := getURL(controlPlane)
+		apiConnectionConf, err := controlPlane.ConnectionConfig()
+		Expect(err).NotTo(HaveOccurred())
+
+		apiServerURL := apiConnectionConf.URL
+		apiServerSecureURL := apiConnectionConf.SecureURL
 		etcdClientURL := getURL(controlPlane.Etcd)
 		controllerManagerURL := getURL(controllerManager)
 		schedulerURL := getURL(scheduler)
 
 		isEtcdListeningForClients := isSomethingListeningOnPort(etcdClientURL.Host)
 		isAPIServerListening := isSomethingListeningOnPort(apiServerURL.Host)
+		isAPIServerSecurelyListening := isSomethingListeningOnPort(apiServerSecureURL.Host)
 		isControllerManagerListening := isSomethingListeningOnPort(controllerManagerURL.Host)
 		isSchedulerListening := isSomethingListeningOnPort(schedulerURL.Host)
 
@@ -54,6 +61,8 @@ var _ = Describe("The Testing Framework", func() {
 		By("Ensuring APIServer is listening")
 		Expect(isAPIServerListening()).To(BeTrue(),
 			fmt.Sprintf("Expected APIServer to listen on %s", apiServerURL.Host))
+		Expect(isAPIServerSecurelyListening()).To(BeTrue(),
+			fmt.Sprintf("Expected APIServer to listen on %s", apiServerSecureURL.Host))
 
 		By("Ensuring ControllerManager is listening")
 		Expect(isControllerManagerListening()).To(BeTrue(),
@@ -81,7 +90,8 @@ var _ = Describe("The Testing Framework", func() {
 		Expect(isEtcdListeningForClients()).To(BeFalse(), "Expected Etcd not to listen for clients anymore")
 
 		By("Ensuring APIServer is not listening anymore")
-		Expect(isAPIServerListening()).To(BeFalse(), "Expected APIServer not to listen anymore")
+		Expect(isAPIServerListening()).To(BeFalse(), "Expected APIServer not to listen on http anymore")
+		Expect(isAPIServerSecurelyListening()).To(BeFalse(), "Expected APIServer not to listen on https anymore")
 
 		By("Ensuring ControllerManager is not listening anymore")
 		Expect(isControllerManagerListening()).To(BeFalse(), "Expected ControllerManager not to listen anymore")
@@ -93,6 +103,22 @@ var _ = Describe("The Testing Framework", func() {
 		Expect(func() {
 			Expect(controlPlane.Stop()).To(Succeed())
 		}).NotTo(Panic())
+	})
+
+	It("kubectl is authorized", func() {
+		controlPlane = &integration.ControlPlane{}
+
+		Expect(controlPlane.Start()).To(Succeed())
+		defer func() {
+			Expect(controlPlane.Stop()).To(Succeed())
+		}()
+
+		kubeCtl, err := controlPlane.KubeCtl()
+		Expect(err).NotTo(HaveOccurred())
+
+		waitForAPI(kubeCtl, "rbac.authorization.k8s.io/v1")
+
+		runWithoutError(kubeCtl, "get", "role")
 	})
 
 	Context("when no additional components are configured", func() {
@@ -200,4 +226,20 @@ func isSomethingListeningOnPort(hostAndPort string) portChecker {
 		conn.Close()
 		return true
 	}
+}
+
+func waitForAPI(kubeCtl *integration.KubeCtl, name string) {
+	Eventually(func() io.Reader {
+		return runWithoutError(kubeCtl, "api-versions")
+	}, "5s", "100ms").Should(ContainSubstring(name))
+}
+
+func runWithoutError(kubeCtl *integration.KubeCtl, args ...string) io.Reader {
+	stdout, stderr, err := kubeCtl.Run(args...)
+
+	errBytes, readErr := ioutil.ReadAll(stderr)
+	ExpectWithOffset(1, readErr).NotTo(HaveOccurred())
+	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "stderr: %s", errBytes)
+
+	return stdout
 }

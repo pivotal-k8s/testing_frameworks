@@ -103,6 +103,9 @@ func (f *ControlPlane) KubeCtl() (*KubeCtl, error) {
 	if err != nil {
 		return nil, err
 	}
-	k.Opts = append(k.Opts, fmt.Sprintf("--server=%s", config.URL))
+	k.Opts = append(k.Opts,
+		fmt.Sprintf("--server=%s", config.URL),
+		"--insecure-skip-tls-verify",
+	)
 	return k, nil
 }
