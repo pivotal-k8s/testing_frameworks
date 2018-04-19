@@ -22,6 +22,9 @@ func (f *ControlPlane) Setup(config cluster.Config) error {
 	f.Etcd = &Etcd{
 		DataDir: config.Etcd.DataDir,
 	}
+	f.APIServer = &APIServer{
+		CertDir: config.CertificatesDir,
+	}
 	return f.Start()
 }
 

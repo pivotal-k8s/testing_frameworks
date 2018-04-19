@@ -55,6 +55,9 @@ type Fixture interface {
 // https://github.com/kubernetes/kubernetes/blob/c8cded58d71e36665bd345a70fbe404e7523abb8/cmd/kubeadm/app/apis/kubeadm/types.go#L30
 type Config struct {
 	Etcd Etcd
+	// CertificatesDir specifies where to store or look for all required certificates.
+	// See also https://github.com/kubernetes/kubernetes/blob/c8cded58d71e36665bd345a70fbe404e7523abb8/cmd/kubeadm/app/apis/kubeadm/types.go#L104
+	CertificatesDir string
 }
 
 // Etcd contains elements describing Etcd configuration.

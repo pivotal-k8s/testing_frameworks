@@ -45,4 +45,20 @@ var _ = Describe("Cluster Framework Compliance", func() {
 
 		Expect(fixture.TearDown()).To(Succeed())
 	})
+
+	It("Manages a configured apiserver certificate directory", func() {
+		dir, err := ioutil.TempDir("", "")
+		Expect(err).NotTo(HaveOccurred())
+
+		certDir := filepath.Join(dir, "apiserver-cert-dir")
+		Expect(certDir).NotTo(BeAnExistingFile())
+
+		fixture = &integration.ControlPlane{}
+		err = fixture.Setup(cluster.Config{CertificatesDir: certDir})
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(certDir).To(BeADirectory())
+
+		Expect(fixture.TearDown()).To(Succeed())
+	})
 })
