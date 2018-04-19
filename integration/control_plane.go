@@ -3,6 +3,8 @@ package integration
 import (
 	"fmt"
 	"net/url"
+
+	"sigs.k8s.io/testing_frameworks/cluster"
 )
 
 // ControlPlane is a struct that knows how to start your test control plane.
@@ -12,6 +14,12 @@ import (
 type ControlPlane struct {
 	APIServer *APIServer
 	Etcd      *Etcd
+}
+
+// Setup will start your control plane processes according to the
+// supplied configuration.
+func (f *ControlPlane) Setup(cluster.Config) error {
+	return f.Start()
 }
 
 // Start will start your control plane processes. To stop them, call Stop().
@@ -30,6 +38,11 @@ func (f *ControlPlane) Start() error {
 	return f.APIServer.Start()
 }
 
+// TearDown will stop your control plane processes. This is an alias for Stop()
+func (f *ControlPlane) TearDown() error {
+	return f.Stop()
+}
+
 // Stop will stop your control plane processes, and clean up their data.
 func (f *ControlPlane) Stop() error {
 	if f.APIServer != nil {
@@ -43,6 +56,11 @@ func (f *ControlPlane) Stop() error {
 		}
 	}
 	return nil
+}
+
+// ClientConfig returns the URL of your APIServer. This is an alias for APIURL()
+func (f *ControlPlane) ClientConfig() *url.URL {
+	return f.APIURL()
 }
 
 // APIURL returns the URL you should connect to to talk to your API.
