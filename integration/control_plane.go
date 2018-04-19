@@ -18,7 +18,10 @@ type ControlPlane struct {
 
 // Setup will start your control plane processes according to the
 // supplied configuration.
-func (f *ControlPlane) Setup(cluster.Config) error {
+func (f *ControlPlane) Setup(config cluster.Config) error {
+	f.Etcd = &Etcd{
+		DataDir: config.Etcd.DataDir,
+	}
 	return f.Start()
 }
 

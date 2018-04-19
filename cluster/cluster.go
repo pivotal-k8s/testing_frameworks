@@ -16,17 +16,6 @@ package cluster
 
 import "net/url"
 
-// Config is a struct into which you can parse a YAML or JSON config
-// file (which should always be compatible with
-// https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#config-file
-// ) to describe your test cluster.
-//
-// To maintain compatibility with kubeadm, we should follow the
-// patterns established in
-// https://github.com/kubernetes/kubernetes/blob/c8cded58d71e36665bd345a70fbe404e7523abb8/cmd/kubeadm/app/apis/kubeadm/types.go#L30
-type Config struct {
-}
-
 // Fixture is some kind of test cluster fixture, which can be started, interacted with, and stopped.
 type Fixture interface {
 	// Setup starts the test cluster according to the provided
@@ -41,8 +30,12 @@ type Fixture interface {
 	// TearDown cleanly stops the test cluster. If we can't stop
 	// cleanly, return an error.
 	//
-	// This should block until the test cluster has stopped, or we
-	// have given up on stopping it and returned an error.
+	// TearDown should block until the test cluster has stopped,
+	// or we have given up on stopping it and returned an error.
+	//
+	// TearDown should be idempotent. If a user calls TearDown
+	// twice in a row, and the first call succeded, then the
+	// second call should also succeed.
 	TearDown() error
 
 	// ClientConfig returns the URL at which you can find the APIServer
@@ -50,4 +43,24 @@ type Fixture interface {
 	// rest.Config from
 	// https://github.com/kubernetes/client-go/blob/master/rest/config.go.
 	ClientConfig() *url.URL
+}
+
+// Config is a struct into which you can parse a YAML or JSON config
+// file (which should always be compatible with
+// https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#config-file
+// ) to describe your test cluster.
+//
+// To maintain compatibility with kubeadm, we should follow the
+// patterns established in
+// https://github.com/kubernetes/kubernetes/blob/c8cded58d71e36665bd345a70fbe404e7523abb8/cmd/kubeadm/app/apis/kubeadm/types.go#L30
+type Config struct {
+	Etcd Etcd
+}
+
+// Etcd contains elements describing Etcd configuration.
+// See also https://github.com/kubernetes/kubernetes/blob/c8cded58d71e36665bd345a70fbe404e7523abb8/cmd/kubeadm/app/apis/kubeadm/types.go#L163
+type Etcd struct {
+	// DataDir is the directory etcd will place its data.
+	// Defaults to "/var/lib/etcd".
+	DataDir string
 }
