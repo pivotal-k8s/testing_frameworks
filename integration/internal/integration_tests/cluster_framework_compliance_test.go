@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"sigs.k8s.io/testing_frameworks/cluster"
 	"sigs.k8s.io/testing_frameworks/integration"
 )
@@ -60,5 +61,23 @@ var _ = Describe("Cluster Framework Compliance", func() {
 		Expect(certDir).To(BeADirectory())
 
 		Expect(fixture.TearDown()).To(Succeed())
+	})
+
+	It("Fails on an unknown commandline argument", func() {
+		stdErr := gbytes.NewBuffer()
+
+		fixture := &integration.ControlPlane{
+			APIServer: &integration.APIServer{
+				Err: stdErr,
+			},
+		}
+
+		config := cluster.Config{
+			APIServerExtraArgs: map[string]string{
+				"--some-silly-arg": "",
+			},
+		}
+		Expect(fixture.Setup(config)).NotTo(Succeed())
+		Expect(stdErr).To(gbytes.Say("some-silly-arg"))
 	})
 })

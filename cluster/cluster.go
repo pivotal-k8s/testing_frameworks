@@ -58,6 +58,11 @@ type Config struct {
 	// CertificatesDir specifies where to store or look for all required certificates.
 	// See also https://github.com/kubernetes/kubernetes/blob/c8cded58d71e36665bd345a70fbe404e7523abb8/cmd/kubeadm/app/apis/kubeadm/types.go#L104
 	CertificatesDir string
+
+	// APIServerExtraArgs is a set of extra flags to pass to the API Server or override
+	// default ones in form of <flagname>=<value>.
+	// See also https://github.com/kubernetes/kubernetes/blob/c8cded58d71e36665bd345a70fbe404e7523abb8/cmd/kubeadm/app/apis/kubeadm/types.go#L81
+	APIServerExtraArgs map[string]string
 }
 
 // Etcd contains elements describing Etcd configuration.

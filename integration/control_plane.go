@@ -22,9 +22,20 @@ func (f *ControlPlane) Setup(config cluster.Config) error {
 	f.Etcd = &Etcd{
 		DataDir: config.Etcd.DataDir,
 	}
-	f.APIServer = &APIServer{
-		CertDir: config.CertificatesDir,
+	args := []string{}
+	for k, v := range config.APIServerExtraArgs {
+		if v == "" {
+			args = append(args, k)
+		} else {
+			args = append(args, fmt.Sprintf("%s=%s", k, v))
+		}
 	}
+	if f.APIServer == nil {
+		f.APIServer = &APIServer{}
+	}
+	f.APIServer.CertDir = config.CertificatesDir
+	f.APIServer.Args = args
+
 	return f.Start()
 }
 
