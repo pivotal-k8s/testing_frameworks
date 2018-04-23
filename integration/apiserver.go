@@ -15,14 +15,6 @@ type APIServer struct {
 	// If this is not specified, we default to a random free port on localhost.
 	URL *url.URL
 
-	// Path is the path to the apiserver binary.
-	//
-	// If this is left as the empty string, we will attempt to locate a binary,
-	// by checking for the TEST_ASSET_KUBE_APISERVER environment variable, and
-	// the default test assets directory. See the "Binaries" section above (in
-	// doc.go) for details.
-	Path string
-
 	// ClusterConfig is the kubeadm-compatible configuration for
 	// clusters, which is partially supported by this framework.
 	//
@@ -56,7 +48,7 @@ func (s *APIServer) Start() error {
 		"kube-apiserver",
 		s.URL,
 		s.ClusterConfig.CertificatesDir,
-		s.Path,
+		s.ClusterConfig.APIServerProcessConfig.Path,
 		s.ClusterConfig.APIServerProcessConfig.StartTimeout,
 		s.ClusterConfig.APIServerProcessConfig.StopTimeout,
 	)
@@ -67,7 +59,6 @@ func (s *APIServer) Start() error {
 	s.processState.HealthCheckEndpoint = "/healthz"
 
 	s.URL = &s.processState.URL
-	s.Path = s.processState.Path
 
 	tmplData := struct {
 		EtcdURL *url.URL

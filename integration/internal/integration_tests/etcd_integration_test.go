@@ -16,7 +16,6 @@ var _ = Describe("Etcd", func() {
 		etcd := &Etcd{}
 
 		Expect(etcd.URL).To(BeZero())
-		Expect(etcd.Path).To(BeZero())
 
 		Expect(etcd.Start()).To(Succeed())
 		defer func() {
@@ -24,7 +23,6 @@ var _ = Describe("Etcd", func() {
 		}()
 
 		Expect(etcd.URL).NotTo(BeZero())
-		Expect(etcd.Path).NotTo(BeZero())
 	})
 
 	It("can inspect IO", func() {

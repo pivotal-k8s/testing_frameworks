@@ -14,14 +14,6 @@ type Etcd struct {
 	// If this is not specified, we default to a random free port on localhost.
 	URL *url.URL
 
-	// Path is the path to the etcd binary.
-	//
-	// If this is left as the empty string, we will attempt to locate a binary,
-	// by checking for the TEST_ASSET_ETCD environment variable, and the default
-	// test assets directory. See the "Binaries" section above (in doc.go) for
-	// details.
-	Path string
-
 	// ClusterConfig is the kubeadm-compatible configuration for
 	// clusters, which is partially supported by this framework.
 	//
@@ -45,7 +37,7 @@ func (e *Etcd) Start() error {
 		"etcd",
 		e.URL,
 		e.ClusterConfig.Etcd.DataDir,
-		e.Path,
+		e.ClusterConfig.Etcd.ProcessConfig.Path,
 		e.ClusterConfig.Etcd.ProcessConfig.StartTimeout,
 		e.ClusterConfig.Etcd.ProcessConfig.StopTimeout,
 	)
@@ -56,7 +48,6 @@ func (e *Etcd) Start() error {
 	e.processState.StartMessage = internal.GetEtcdStartMessage(e.processState.URL)
 
 	e.URL = &e.processState.URL
-	e.Path = e.processState.Path
 
 	tmplData := struct {
 		URL     *url.URL

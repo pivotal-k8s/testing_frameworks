@@ -130,6 +130,15 @@ type Etcd struct {
 
 // ProcessConfig is configuring certain properties for processes.
 type ProcessConfig struct {
+	// Path is the path to the binary.
+	//
+	// If this is left as the empty string, we will attempt to locate a binary,
+	// by checking for the TEST_ASSET_KUBE_<COMPONENT> (e.g.
+	// TEST_ASSET_KUBE_APISERVER, TEST_ASSET_KUBE_ETCD, ...) environment
+	// variable, and the default test assets directory. See the "Binaries"
+	// section above (in doc.go) for details.
+	Path string
+
 	// StartTimeout, StopTimeout specify the time the the process is allowed to
 	// take when starting and stoppping before an error is emitted.
 	//
