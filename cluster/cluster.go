@@ -71,4 +71,8 @@ type Etcd struct {
 	// DataDir is the directory etcd will place its data.
 	// Defaults to "/var/lib/etcd".
 	DataDir string
+
+	// ExtraArgs are extra arguments provided to the etcd binary
+	// when run inside a static pod.
+	ExtraArgs map[string]string
 }

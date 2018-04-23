@@ -25,18 +25,6 @@ type Etcd struct {
 	// details.
 	Path string
 
-	// Args is a list of arguments which will passed to the Etcd binary. Before
-	// they are passed on, the`y will be evaluated as go-template strings. This
-	// means you can use fields which are defined and exported on this Etcd
-	// struct (e.g. "--data-dir={{ .Dir }}").
-	// Those templates will be evaluated after the defaulting of the Etcd's
-	// fields has already happened and just before the binary actually gets
-	// started. Thus you have access to caluclated fields like `URL` and others.
-	//
-	// If not specified, the minimal set of arguments to run the Etcd will be
-	// used.
-	Args []string
-
 	// ClusterConfig is the kubeadm-compatible configuration for
 	// clusters, which is partially supported by this framework.
 	//
@@ -96,8 +84,10 @@ func (e *Etcd) Start() error {
 		e.processState.Dir,
 	}
 
+	args := flattenArgs(e.ClusterConfig.Etcd.ExtraArgs)
+
 	e.processState.Args, err = internal.RenderTemplates(
-		internal.DoEtcdArgDefaulting(e.Args), tmplData,
+		internal.DoEtcdArgDefaulting(args), tmplData,
 	)
 	if err != nil {
 		return err

@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"sigs.k8s.io/testing_frameworks/cluster"
 	. "sigs.k8s.io/testing_frameworks/integration"
 )
 
@@ -48,7 +49,13 @@ var _ = Describe("Etcd", func() {
 		stdout := &bytes.Buffer{}
 		stderr := &bytes.Buffer{}
 		etcd := &Etcd{
-			Args:         []string{"--help"},
+			ClusterConfig: cluster.Config{
+				Etcd: cluster.Etcd{
+					ExtraArgs: map[string]string{
+						"--help": "",
+					},
+				},
+			},
 			Out:          stdout,
 			Err:          stderr,
 			StartTimeout: 500 * time.Millisecond,
