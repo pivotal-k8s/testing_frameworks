@@ -21,6 +21,7 @@ type Etcd struct {
 	// this framework are:
 	//
 	// - ClusterConfig.Etcd.DataDir
+	// - ClusterConfig.Etcd.ExtraArgs
 	ClusterConfig cluster.Config
 
 	processState *internal.ProcessState
