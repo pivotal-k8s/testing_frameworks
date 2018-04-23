@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"sigs.k8s.io/testing_frameworks/cluster"
 	"sigs.k8s.io/testing_frameworks/integration/internal"
 )
 
@@ -24,24 +25,15 @@ type APIServer struct {
 	// doc.go) for details.
 	Path string
 
-	// Args is a list of arguments which will passed to the APIServer binary.
-	// Before they are passed on, they will be evaluated as go-template strings.
-	// This means you can use fields which are defined and exported on this
-	// APIServer struct (e.g. "--cert-dir={{ .Dir }}").
-	// Those templates will be evaluated after the defaulting of the APIServer's
-	// fields has already happened and just before the binary actually gets
-	// started. Thus you have access to caluclated fields like `URL` and others.
+	// ClusterConfig is the kubeadm-compatible configuration for
+	// clusters, which is partially supported by this framework.
 	//
-	// If not specified, the minimal set of arguments to run the APIServer will
-	// be used.
-	Args []string
-
-	// CertDir is a path to a directory containing whatever certificates the
-	// APIServer will need.
+	// The elements of the ClusterConfig which are supported by
+	// this framework are:
 	//
-	// If left unspecified, then the Start() method will create a fresh temporary
-	// directory, and the Stop() method will clean it up.
-	CertDir string
+	// - ClusterConfig.CertificatesDir
+	// - ClusterConfig.APIServerExtraArgs
+	ClusterConfig cluster.Config
 
 	// EtcdURL is the URL of the Etcd the APIServer should use.
 	//
@@ -78,7 +70,7 @@ func (s *APIServer) Start() error {
 	s.processState.DefaultedProcessInput, err = internal.DoDefaulting(
 		"kube-apiserver",
 		s.URL,
-		s.CertDir,
+		s.ClusterConfig.CertificatesDir,
 		s.Path,
 		s.StartTimeout,
 		s.StopTimeout,
@@ -90,13 +82,24 @@ func (s *APIServer) Start() error {
 	s.processState.HealthCheckEndpoint = "/healthz"
 
 	s.URL = &s.processState.URL
-	s.CertDir = s.processState.Dir
 	s.Path = s.processState.Path
 	s.StartTimeout = s.processState.StartTimeout
 	s.StopTimeout = s.processState.StopTimeout
 
+	tmplData := struct {
+		EtcdURL *url.URL
+		URL     *url.URL
+		CertDir string
+	}{
+		s.EtcdURL,
+		s.URL,
+		s.processState.Dir,
+	}
+
+	args := flattenArgs(s.ClusterConfig.APIServerExtraArgs)
+
 	s.processState.Args, err = internal.RenderTemplates(
-		internal.DoAPIServerArgDefaulting(s.Args), s,
+		internal.DoAPIServerArgDefaulting(args), tmplData,
 	)
 	if err != nil {
 		return err
@@ -117,3 +120,15 @@ func (s *APIServer) Stop() error {
 // The internal default arguments are explicitely copied here, we don't want to
 // allow users to change the internal ones.
 var APIServerDefaultArgs = append([]string{}, internal.APIServerDefaultArgs...)
+
+func flattenArgs(mappedArgs map[string]string) []string {
+	args := []string{}
+	for k, v := range mappedArgs {
+		if v == "" {
+			args = append(args, k)
+		} else {
+			args = append(args, fmt.Sprintf("%s=%s", k, v))
+		}
+	}
+	return args
+}

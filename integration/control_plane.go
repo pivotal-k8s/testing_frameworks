@@ -19,22 +19,13 @@ type ControlPlane struct {
 // Setup will start your control plane processes according to the
 // supplied configuration.
 func (f *ControlPlane) Setup(config cluster.Config) error {
-	f.Etcd = &Etcd{
-		DataDir: config.Etcd.DataDir,
-	}
-	args := []string{}
-	for k, v := range config.APIServerExtraArgs {
-		if v == "" {
-			args = append(args, k)
-		} else {
-			args = append(args, fmt.Sprintf("%s=%s", k, v))
-		}
-	}
+	f.Etcd = &Etcd{}
+	f.Etcd.ClusterConfig = config
+
 	if f.APIServer == nil {
 		f.APIServer = &APIServer{}
 	}
-	f.APIServer.CertDir = config.CertificatesDir
-	f.APIServer.Args = args
+	f.APIServer.ClusterConfig = config
 
 	return f.Start()
 }

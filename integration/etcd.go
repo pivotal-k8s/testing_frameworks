@@ -6,6 +6,7 @@ import (
 
 	"net/url"
 
+	"sigs.k8s.io/testing_frameworks/cluster"
 	"sigs.k8s.io/testing_frameworks/integration/internal"
 )
 
@@ -36,11 +37,14 @@ type Etcd struct {
 	// used.
 	Args []string
 
-	// DataDir is a path to a directory in which etcd can store its state.
+	// ClusterConfig is the kubeadm-compatible configuration for
+	// clusters, which is partially supported by this framework.
 	//
-	// If left unspecified, then the Start() method will create a fresh temporary
-	// directory, and the Stop() method will clean it up.
-	DataDir string
+	// The elements of the ClusterConfig which are supported by
+	// this framework are:
+	//
+	// - ClusterConfig.Etcd.DataDir
+	ClusterConfig cluster.Config
 
 	// StartTimeout, StopTimeout specify the time the Etcd is allowed to
 	// take when starting and stopping before an error is emitted.
@@ -68,7 +72,7 @@ func (e *Etcd) Start() error {
 	e.processState.DefaultedProcessInput, err = internal.DoDefaulting(
 		"etcd",
 		e.URL,
-		e.DataDir,
+		e.ClusterConfig.Etcd.DataDir,
 		e.Path,
 		e.StartTimeout,
 		e.StopTimeout,
@@ -80,13 +84,20 @@ func (e *Etcd) Start() error {
 	e.processState.StartMessage = internal.GetEtcdStartMessage(e.processState.URL)
 
 	e.URL = &e.processState.URL
-	e.DataDir = e.processState.Dir
 	e.Path = e.processState.Path
 	e.StartTimeout = e.processState.StartTimeout
 	e.StopTimeout = e.processState.StopTimeout
 
+	tmplData := struct {
+		URL     *url.URL
+		DataDir string
+	}{
+		e.URL,
+		e.processState.Dir,
+	}
+
 	e.processState.Args, err = internal.RenderTemplates(
-		internal.DoEtcdArgDefaulting(e.Args), e,
+		internal.DoEtcdArgDefaulting(e.Args), tmplData,
 	)
 	if err != nil {
 		return err
