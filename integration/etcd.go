@@ -1,9 +1,6 @@
 package integration
 
 import (
-	"io"
-	"time"
-
 	"net/url"
 
 	"sigs.k8s.io/testing_frameworks/cluster"
@@ -34,19 +31,6 @@ type Etcd struct {
 	// - ClusterConfig.Etcd.DataDir
 	ClusterConfig cluster.Config
 
-	// StartTimeout, StopTimeout specify the time the Etcd is allowed to
-	// take when starting and stopping before an error is emitted.
-	//
-	// If not specified, these default to 20 seconds.
-	StartTimeout time.Duration
-	StopTimeout  time.Duration
-
-	// Out, Err specify where Etcd should write its StdOut, StdErr to.
-	//
-	// If not specified, the output will be discarded.
-	Out io.Writer
-	Err io.Writer
-
 	processState *internal.ProcessState
 }
 
@@ -62,8 +46,8 @@ func (e *Etcd) Start() error {
 		e.URL,
 		e.ClusterConfig.Etcd.DataDir,
 		e.Path,
-		e.StartTimeout,
-		e.StopTimeout,
+		e.ClusterConfig.Etcd.ProcessConfig.StartTimeout,
+		e.ClusterConfig.Etcd.ProcessConfig.StopTimeout,
 	)
 	if err != nil {
 		return err
@@ -73,8 +57,6 @@ func (e *Etcd) Start() error {
 
 	e.URL = &e.processState.URL
 	e.Path = e.processState.Path
-	e.StartTimeout = e.processState.StartTimeout
-	e.StopTimeout = e.processState.StopTimeout
 
 	tmplData := struct {
 		URL     *url.URL
@@ -93,7 +75,10 @@ func (e *Etcd) Start() error {
 		return err
 	}
 
-	return e.processState.Start(e.Out, e.Err)
+	return e.processState.Start(
+		e.ClusterConfig.Etcd.ProcessConfig.Out,
+		e.ClusterConfig.Etcd.ProcessConfig.Err,
+	)
 }
 
 // Stop stops this process gracefully, waits for its termination, and cleans up

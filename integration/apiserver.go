@@ -2,9 +2,7 @@ package integration
 
 import (
 	"fmt"
-	"io"
 	"net/url"
-	"time"
 
 	"sigs.k8s.io/testing_frameworks/cluster"
 	"sigs.k8s.io/testing_frameworks/integration/internal"
@@ -40,19 +38,6 @@ type APIServer struct {
 	// If this is not specified, the Start() method will return an error.
 	EtcdURL *url.URL
 
-	// StartTimeout, StopTimeout specify the time the APIServer is allowed to
-	// take when starting and stoppping before an error is emitted.
-	//
-	// If not specified, these default to 20 seconds.
-	StartTimeout time.Duration
-	StopTimeout  time.Duration
-
-	// Out, Err specify where APIServer should write its StdOut, StdErr to.
-	//
-	// If not specified, the output will be discarded.
-	Out io.Writer
-	Err io.Writer
-
 	processState *internal.ProcessState
 }
 
@@ -72,8 +57,8 @@ func (s *APIServer) Start() error {
 		s.URL,
 		s.ClusterConfig.CertificatesDir,
 		s.Path,
-		s.StartTimeout,
-		s.StopTimeout,
+		s.ClusterConfig.APIServerProcessConfig.StartTimeout,
+		s.ClusterConfig.APIServerProcessConfig.StopTimeout,
 	)
 	if err != nil {
 		return err
@@ -83,8 +68,6 @@ func (s *APIServer) Start() error {
 
 	s.URL = &s.processState.URL
 	s.Path = s.processState.Path
-	s.StartTimeout = s.processState.StartTimeout
-	s.StopTimeout = s.processState.StopTimeout
 
 	tmplData := struct {
 		EtcdURL *url.URL
@@ -105,7 +88,10 @@ func (s *APIServer) Start() error {
 		return err
 	}
 
-	return s.processState.Start(s.Out, s.Err)
+	return s.processState.Start(
+		s.ClusterConfig.APIServerProcessConfig.Out,
+		s.ClusterConfig.APIServerProcessConfig.Err,
+	)
 }
 
 // Stop stops this process gracefully, waits for its termination, and cleans up

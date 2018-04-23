@@ -17,8 +17,6 @@ var _ = Describe("Etcd", func() {
 
 		Expect(etcd.URL).To(BeZero())
 		Expect(etcd.Path).To(BeZero())
-		Expect(etcd.StartTimeout).To(BeZero())
-		Expect(etcd.StopTimeout).To(BeZero())
 
 		Expect(etcd.Start()).To(Succeed())
 		defer func() {
@@ -27,14 +25,16 @@ var _ = Describe("Etcd", func() {
 
 		Expect(etcd.URL).NotTo(BeZero())
 		Expect(etcd.Path).NotTo(BeZero())
-		Expect(etcd.StartTimeout).NotTo(BeZero())
-		Expect(etcd.StopTimeout).NotTo(BeZero())
 	})
 
 	It("can inspect IO", func() {
 		stderr := &bytes.Buffer{}
+
+		config := cluster.Config{}
+		config.Etcd.ProcessConfig.Err = stderr
+
 		etcd := &Etcd{
-			Err: stderr,
+			ClusterConfig: config,
 		}
 
 		Expect(etcd.Start()).To(Succeed())
@@ -48,17 +48,17 @@ var _ = Describe("Etcd", func() {
 	It("can use user specified Args", func() {
 		stdout := &bytes.Buffer{}
 		stderr := &bytes.Buffer{}
+
+		config := cluster.Config{}
+		config.Etcd.ExtraArgs = map[string]string{
+			"--help": "",
+		}
+		config.Etcd.ProcessConfig.Out = stdout
+		config.Etcd.ProcessConfig.Err = stderr
+		config.Etcd.ProcessConfig.StartTimeout = 500 * time.Millisecond
+
 		etcd := &Etcd{
-			ClusterConfig: cluster.Config{
-				Etcd: cluster.Etcd{
-					ExtraArgs: map[string]string{
-						"--help": "",
-					},
-				},
-			},
-			Out:          stdout,
-			Err:          stderr,
-			StartTimeout: 500 * time.Millisecond,
+			ClusterConfig: config,
 		}
 
 		// it will timeout, as we'll never see the "startup message" we are waiting

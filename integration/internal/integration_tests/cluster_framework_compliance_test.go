@@ -3,6 +3,7 @@ package integration_tests
 import (
 	"io/ioutil"
 	"path/filepath"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -39,7 +40,11 @@ var _ = Describe("Cluster Framework Compliance", func() {
 		Expect(dataDir).NotTo(BeAnExistingFile())
 
 		fixture = &integration.ControlPlane{}
-		err = fixture.Setup(cluster.Config{Etcd: cluster.Etcd{DataDir: dataDir}})
+
+		config := cluster.Config{}
+		config.Etcd.DataDir = dataDir
+
+		err = fixture.Setup(config)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(dataDir).To(BeADirectory())
@@ -55,7 +60,11 @@ var _ = Describe("Cluster Framework Compliance", func() {
 		Expect(certDir).NotTo(BeAnExistingFile())
 
 		fixture = &integration.ControlPlane{}
-		err = fixture.Setup(cluster.Config{CertificatesDir: certDir})
+
+		config := cluster.Config{}
+		config.CertificatesDir = certDir
+
+		err = fixture.Setup(config)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(certDir).To(BeADirectory())
@@ -66,17 +75,19 @@ var _ = Describe("Cluster Framework Compliance", func() {
 	It("Fails on an unknown commandline argument", func() {
 		stdErr := gbytes.NewBuffer()
 
+		config := cluster.Config{}
+		config.APIServerProcessConfig.Err = stdErr
+		config.APIServerProcessConfig.StartTimeout = 500 * time.Millisecond
+		config.APIServerExtraArgs = map[string]string{
+			"--some-silly-arg": "",
+		}
+
 		fixture := &integration.ControlPlane{
 			APIServer: &integration.APIServer{
-				Err: stdErr,
+				ClusterConfig: config,
 			},
 		}
 
-		config := cluster.Config{
-			APIServerExtraArgs: map[string]string{
-				"--some-silly-arg": "",
-			},
-		}
 		Expect(fixture.Setup(config)).NotTo(Succeed())
 		Expect(stdErr).To(gbytes.Say("some-silly-arg"))
 	})

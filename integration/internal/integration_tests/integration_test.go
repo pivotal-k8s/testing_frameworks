@@ -82,8 +82,8 @@ var _ = Describe("The Testing Framework", func() {
 	Context("when the control plane is configured with its components", func() {
 		It("it does not default them", func() {
 			myEtcd, myAPIServer :=
-				&integration.Etcd{StartTimeout: 15 * time.Second},
-				&integration.APIServer{StopTimeout: 16 * time.Second}
+				&integration.Etcd{},
+				&integration.APIServer{}
 
 			controlPlane = &integration.ControlPlane{
 				Etcd:      myEtcd,
@@ -93,8 +93,6 @@ var _ = Describe("The Testing Framework", func() {
 			Expect(controlPlane.Start()).To(Succeed())
 			Expect(controlPlane.Etcd).To(BeIdenticalTo(myEtcd))
 			Expect(controlPlane.APIServer).To(BeIdenticalTo(myAPIServer))
-			Expect(controlPlane.Etcd.StartTimeout).To(Equal(15 * time.Second))
-			Expect(controlPlane.APIServer.StopTimeout).To(Equal(16 * time.Second))
 		})
 	})
 
