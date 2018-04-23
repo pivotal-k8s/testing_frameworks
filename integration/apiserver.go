@@ -10,11 +10,6 @@ import (
 
 // APIServer knows how to run a kubernetes apiserver.
 type APIServer struct {
-	// URL is the address the ApiServer should listen on for client connections.
-	//
-	// If this is not specified, we default to a random free port on localhost.
-	URL *url.URL
-
 	// ClusterConfig is the kubeadm-compatible configuration for
 	// clusters, which is partially supported by this framework.
 	//
@@ -46,7 +41,7 @@ func (s *APIServer) Start() error {
 
 	s.processState.DefaultedProcessInput, err = internal.DoDefaulting(
 		"kube-apiserver",
-		s.URL,
+		s.ClusterConfig.API.BindURL,
 		s.ClusterConfig.CertificatesDir,
 		s.ClusterConfig.APIServerProcessConfig.Path,
 		s.ClusterConfig.APIServerProcessConfig.StartTimeout,
@@ -58,15 +53,13 @@ func (s *APIServer) Start() error {
 
 	s.processState.HealthCheckEndpoint = "/healthz"
 
-	s.URL = &s.processState.URL
-
 	tmplData := struct {
 		EtcdURL *url.URL
 		URL     *url.URL
 		CertDir string
 	}{
 		s.EtcdURL,
-		s.URL,
+		&s.processState.URL,
 		s.processState.Dir,
 	}
 

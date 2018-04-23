@@ -85,6 +85,9 @@ type Config struct {
 	// Etcd holds configuration for etcd.
 	Etcd Etcd
 
+	// API holds configuration for the k8s apiserver.
+	API API
+
 	// KubeadmMasterConfig is the nested struct holding all the configuration
 	// supported by kubeadm
 	KubeadmMasterConfig
@@ -114,6 +117,9 @@ type KubeadmEtcd struct {
 type LightWeightEtcd struct {
 	// ProcessConfig holds configuration properties releated to the Etcd progress
 	ProcessConfig ProcessConfig
+
+	// BindURL is the URL Etcd should bind to
+	BindURL *url.URL
 }
 
 // Etcd contains elements describing Etcd configuration.
@@ -126,6 +132,36 @@ type Etcd struct {
 	// LightWeightEtcd is the nested struct holding all the configuration
 	// additionally supported by the "lightweight" framework
 	LightWeightEtcd
+}
+
+// KubeadmAPI is a struct which is used as a nested struct in `API`.
+//
+// We use this indirection to be prepared if we'd be vendored into k/k -- then
+// we could remove `KubeadmEtcd` and use the actual one from within k/k.
+//
+// For now this is empty, as none of the currently supported framework supports
+// any of these settings.
+type KubeadmAPI struct{}
+
+// LightWeightAPI is a struct used as a nested struct in `API` to
+// add aditional configuration properties needed by the "lightweight"
+// implementation to the main `API` struct.
+type LightWeightAPI struct {
+	// BindURL is a URL the API should listen on.
+	//
+	// If this is kept empty, it will be defaulted to a free port on "localhost".
+	BindURL *url.URL
+}
+
+// API struct contains elements of API server address.
+type API struct {
+	// KubeadmAPI is the nested struct holding all the configuration for the API
+	// server address supported by kubeadm.
+	KubeadmAPI
+
+	// LightWeightAPI is the nested struct holding all addirional configuration
+	// for the API server adress supported by the "lightweight" framework.
+	LightWeightAPI
 }
 
 // ProcessConfig is configuring certain properties for processes.

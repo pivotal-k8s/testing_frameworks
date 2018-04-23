@@ -9,11 +9,6 @@ import (
 
 // Etcd knows how to run an etcd server.
 type Etcd struct {
-	// URL is the address the Etcd should listen on for client connections.
-	//
-	// If this is not specified, we default to a random free port on localhost.
-	URL *url.URL
-
 	// ClusterConfig is the kubeadm-compatible configuration for
 	// clusters, which is partially supported by this framework.
 	//
@@ -36,7 +31,7 @@ func (e *Etcd) Start() error {
 
 	e.processState.DefaultedProcessInput, err = internal.DoDefaulting(
 		"etcd",
-		e.URL,
+		e.ClusterConfig.Etcd.BindURL,
 		e.ClusterConfig.Etcd.DataDir,
 		e.ClusterConfig.Etcd.ProcessConfig.Path,
 		e.ClusterConfig.Etcd.ProcessConfig.StartTimeout,
@@ -48,13 +43,11 @@ func (e *Etcd) Start() error {
 
 	e.processState.StartMessage = internal.GetEtcdStartMessage(e.processState.URL)
 
-	e.URL = &e.processState.URL
-
 	tmplData := struct {
 		URL     *url.URL
 		DataDir string
 	}{
-		e.URL,
+		&e.processState.URL,
 		e.processState.Dir,
 	}
 

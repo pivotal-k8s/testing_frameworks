@@ -12,19 +12,6 @@ import (
 )
 
 var _ = Describe("Etcd", func() {
-	It("sets the properties after defaulting", func() {
-		etcd := &Etcd{}
-
-		Expect(etcd.URL).To(BeZero())
-
-		Expect(etcd.Start()).To(Succeed())
-		defer func() {
-			Expect(etcd.Stop()).To(Succeed())
-		}()
-
-		Expect(etcd.URL).NotTo(BeZero())
-	})
-
 	It("can inspect IO", func() {
 		stderr := &bytes.Buffer{}
 
