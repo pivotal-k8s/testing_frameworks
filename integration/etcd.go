@@ -11,12 +11,6 @@ import (
 type Etcd struct {
 	// ClusterConfig is the kubeadm-compatible configuration for
 	// clusters, which is partially supported by this framework.
-	//
-	// The elements of the ClusterConfig which are supported by
-	// this framework are:
-	//
-	// - ClusterConfig.Etcd.DataDir
-	// - ClusterConfig.Etcd.ExtraArgs
 	ClusterConfig cluster.Config
 
 	processState *internal.ProcessState

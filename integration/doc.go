@@ -50,19 +50,21 @@ Binaries
 Etcd, APIServer & KubeCtl use the same mechanism to determine which binaries to
 use when they get started.
 
-1. If the component is configured with a `Path` the framework tries to run that
-binary.
-For example:
+1. If the component is configured with a cluster.Config that holds a
+`APIServerProcessConfig` or a `Etcd.ProcessConfig` which has a field named
+`Path` the framework tries to run that binary. For example:
 
+	cConf := cluster.Config{}
+	cConf.Etcd.ProcessConfig.Path = "/some/other/etcd"
 	myEtcd := &Etcd{
-		Path: "/some/other/etcd",
+		ClusterConfig: cConf,
 	}
 	cp := &integration.ControlPlane{
 		Etcd: myEtcd,
 	}
 	cp.Start()
 
-2. If the Path field on APIServer, Etcd or KubeCtl is left unset and an
+2. If that `Path` field on the process config is left unset and an
 environment variable named `TEST_ASSET_KUBE_APISERVER`, `TEST_ASSET_ETCD` or
 `TEST_ASSET_KUBECTL` is set, its value is used as a path to the binary for the
 APIServer, Etcd or KubeCtl.
@@ -107,12 +109,15 @@ happened.
 		Args:    append(EtcdDefaultArgs, "--additional=arg"),
 		DataDir: "/my/special/data/dir",
 	}
+	cConf := cluster.Config{}
+	cConf.Etcd.ExtraArgs = etcdArgs
+	cConf.Etcd.DataDir = "/my/special/data/dir"
 
 	// When you want to use a custom set of arguments ...
 	etcd := &Etcd{
-		// Only custom arguments will be passed to the binary
-		Args:    []string{"--one=1", "--two=2", "--three=3"},
+		Args:    etcdArgs,
 		DataDir: "/my/special/data/dir",
+		ClusterConfig: cConfg,
 	}
 
 */

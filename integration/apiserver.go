@@ -12,12 +12,6 @@ import (
 type APIServer struct {
 	// ClusterConfig is the kubeadm-compatible configuration for
 	// clusters, which is partially supported by this framework.
-	//
-	// The elements of the ClusterConfig which are supported by
-	// this framework are:
-	//
-	// - ClusterConfig.CertificatesDir
-	// - ClusterConfig.APIServerExtraArgs
 	ClusterConfig cluster.Config
 
 	// EtcdURL is the URL of the Etcd the APIServer should use.
