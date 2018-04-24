@@ -1,6 +1,6 @@
 /*
 
-Package integration implements an integration testing framework for kubernetes.
+Package lightweight implements an integration testing framework for kubernetes.
 
 It provides components for standing up a kubernetes API, against which you can test a
 kubernetes client, or other kubernetes components. The lifecycle of the components
@@ -13,7 +13,7 @@ and Etcd, you can use `./scripts/download-binaries.sh` to download APIServer
 and Etcd binaries for your platform. Then add something like the following to
 your tests:
 
-	cp := &integration.ControlPlane{}
+	cp := &lightweight.ControlPlane{}
 	cp.Start()
 	kubeCtl := cp.KubeCtl()
 	stdout, stderr, err := kubeCtl.Run("get", "pods")
@@ -59,7 +59,7 @@ use when they get started.
 	myEtcd := &Etcd{
 		ClusterConfig: cConf,
 	}
-	cp := &integration.ControlPlane{
+	cp := &lightweight.ControlPlane{
 		Etcd: myEtcd,
 	}
 	cp.Start()
@@ -121,4 +121,4 @@ happened.
 	}
 
 */
-package integration
+package lightweight

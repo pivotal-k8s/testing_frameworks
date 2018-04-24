@@ -1,10 +1,10 @@
-package integration
+package lightweight
 
 import (
 	"net/url"
 
 	"sigs.k8s.io/testing_frameworks/cluster"
-	"sigs.k8s.io/testing_frameworks/integration/internal"
+	"sigs.k8s.io/testing_frameworks/lightweight/internal"
 )
 
 // Etcd knows how to run an etcd server.

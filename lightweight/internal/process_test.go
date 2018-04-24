@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
-	. "sigs.k8s.io/testing_frameworks/integration/internal"
+	. "sigs.k8s.io/testing_frameworks/lightweight/internal"
 )
 
 var _ = Describe("Start method", func() {

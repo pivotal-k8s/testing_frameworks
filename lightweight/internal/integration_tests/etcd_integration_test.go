@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"sigs.k8s.io/testing_frameworks/cluster"
-	. "sigs.k8s.io/testing_frameworks/integration"
+	. "sigs.k8s.io/testing_frameworks/lightweight"
 )
 
 var _ = Describe("Etcd", func() {

@@ -1,4 +1,4 @@
-package integration_test
+package lightweight_test
 
 import (
 	"io/ioutil"
@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "sigs.k8s.io/testing_frameworks/integration"
+	. "sigs.k8s.io/testing_frameworks/lightweight"
 )
 
 var _ = Describe("Kubectl", func() {

@@ -1,11 +1,11 @@
-package integration
+package lightweight
 
 import (
 	"fmt"
 	"net/url"
 
 	"sigs.k8s.io/testing_frameworks/cluster"
-	"sigs.k8s.io/testing_frameworks/integration/internal"
+	"sigs.k8s.io/testing_frameworks/lightweight/internal"
 )
 
 // APIServer knows how to run a kubernetes apiserver.

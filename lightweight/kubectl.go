@@ -1,11 +1,11 @@
-package integration
+package lightweight
 
 import (
 	"bytes"
 	"io"
 	"os/exec"
 
-	"sigs.k8s.io/testing_frameworks/integration/internal"
+	"sigs.k8s.io/testing_frameworks/lightweight/internal"
 )
 
 // KubeCtl is a wrapper around the kubectl binary.

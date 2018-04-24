@@ -8,11 +8,11 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"sigs.k8s.io/testing_frameworks/integration"
+	"sigs.k8s.io/testing_frameworks/lightweight"
 )
 
 var _ = Describe("The Testing Framework", func() {
-	var controlPlane *integration.ControlPlane
+	var controlPlane *lightweight.ControlPlane
 
 	AfterEach(func() {
 		Expect(controlPlane.Stop()).To(Succeed())
@@ -21,7 +21,7 @@ var _ = Describe("The Testing Framework", func() {
 	It("Successfully manages the control plane lifecycle", func() {
 		var err error
 
-		controlPlane = &integration.ControlPlane{}
+		controlPlane = &lightweight.ControlPlane{}
 
 		By("Starting all the control plane processes")
 		err = controlPlane.Start()
@@ -68,7 +68,7 @@ var _ = Describe("The Testing Framework", func() {
 	Context("when Stop() is called on the control plane", func() {
 		Context("but the control plane is not started yet", func() {
 			It("does not error", func() {
-				controlPlane = &integration.ControlPlane{}
+				controlPlane = &lightweight.ControlPlane{}
 
 				stoppingTheControlPlane := func() {
 					Expect(controlPlane.Stop()).To(Succeed())
@@ -82,10 +82,10 @@ var _ = Describe("The Testing Framework", func() {
 	Context("when the control plane is configured with its components", func() {
 		It("it does not default them", func() {
 			myEtcd, myAPIServer :=
-				&integration.Etcd{},
-				&integration.APIServer{}
+				&lightweight.Etcd{},
+				&lightweight.APIServer{}
 
-			controlPlane = &integration.ControlPlane{
+			controlPlane = &lightweight.ControlPlane{
 				Etcd:      myEtcd,
 				APIServer: myAPIServer,
 			}
@@ -98,7 +98,7 @@ var _ = Describe("The Testing Framework", func() {
 
 	Measure("It should be fast to bring up and tear down the control plane", func(b Benchmarker) {
 		b.Time("lifecycle", func() {
-			controlPlane = &integration.ControlPlane{}
+			controlPlane = &lightweight.ControlPlane{}
 
 			controlPlane.Start()
 			controlPlane.Stop()
@@ -133,7 +133,7 @@ func isSomethingListeningOnPort(hostAndPort string) portChecker {
 // this changed behaviour does what it should do, we used the same test as in
 // k/k's test-cmd (see link above) and test if certain well-known known APIs
 // are actually available.
-func CheckAPIServerIsReady(kubeCtl *integration.KubeCtl) {
+func CheckAPIServerIsReady(kubeCtl *lightweight.KubeCtl) {
 	expectedAPIS := []string{
 		"/api/v1/namespaces/default/pods 200 OK",
 		"/api/v1/namespaces/default/replicationcontrollers 200 OK",

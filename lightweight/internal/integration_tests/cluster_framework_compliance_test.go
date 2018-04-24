@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"sigs.k8s.io/testing_frameworks/cluster"
-	"sigs.k8s.io/testing_frameworks/integration"
+	"sigs.k8s.io/testing_frameworks/lightweight"
 )
 
 var _ = Describe("Cluster Framework Compliance", func() {
@@ -22,7 +22,7 @@ var _ = Describe("Cluster Framework Compliance", func() {
 	It("Successfully manages the control plane lifecycle", func() {
 		var err error
 
-		fixture = &integration.ControlPlane{}
+		fixture = &lightweight.ControlPlane{}
 		By("Starting all the control plane processes")
 		err = fixture.Setup(cluster.Config{})
 		Expect(err).NotTo(HaveOccurred(), "Expected controlPlane to start successfully")
@@ -39,7 +39,7 @@ var _ = Describe("Cluster Framework Compliance", func() {
 		dataDir := filepath.Join(dir, "etcd-test-dir")
 		Expect(dataDir).NotTo(BeAnExistingFile())
 
-		fixture = &integration.ControlPlane{}
+		fixture = &lightweight.ControlPlane{}
 
 		config := cluster.Config{}
 		config.Etcd.DataDir = dataDir
@@ -59,7 +59,7 @@ var _ = Describe("Cluster Framework Compliance", func() {
 		certDir := filepath.Join(dir, "apiserver-cert-dir")
 		Expect(certDir).NotTo(BeAnExistingFile())
 
-		fixture = &integration.ControlPlane{}
+		fixture = &lightweight.ControlPlane{}
 
 		config := cluster.Config{}
 		config.CertificatesDir = certDir
@@ -82,8 +82,8 @@ var _ = Describe("Cluster Framework Compliance", func() {
 			"--some-silly-arg": "",
 		}
 
-		fixture := &integration.ControlPlane{
-			APIServer: &integration.APIServer{
+		fixture := &lightweight.ControlPlane{
+			APIServer: &lightweight.APIServer{
 				ClusterConfig: config,
 			},
 		}

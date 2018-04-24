@@ -1,7 +1,7 @@
 package internal_test
 
 import (
-	. "sigs.k8s.io/testing_frameworks/integration/internal"
+	. "sigs.k8s.io/testing_frameworks/lightweight/internal"
 
 	"fmt"
 	"net"

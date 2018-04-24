@@ -3,7 +3,7 @@ package internal_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "sigs.k8s.io/testing_frameworks/integration/internal"
+	. "sigs.k8s.io/testing_frameworks/lightweight/internal"
 )
 
 var _ = Describe("Apiserver", func() {

@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func TestIntegration(t *testing.T) {
+func TestLightweight(t *testing.T) {
 	t.Parallel()
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Integration Framework Integration Tests")
+	RunSpecs(t, "Lightweight Framework Integration Tests")
 }

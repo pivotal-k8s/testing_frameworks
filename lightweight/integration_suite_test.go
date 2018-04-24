@@ -1,4 +1,4 @@
-package integration_test
+package lightweight_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func TestIntegration(t *testing.T) {
+func TestLightweight(t *testing.T) {
 	t.Parallel()
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Integration Framework Unit Tests")
+	RunSpecs(t, "Lightweight Framework Unit Tests")
 }
