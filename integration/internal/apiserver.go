@@ -15,3 +15,7 @@ func DoAPIServerArgDefaulting(args []string) []string {
 
 	return APIServerDefaultArgs
 }
+
+func DoAPIServerArgAppendingToDefaults(args []string) []string {
+	return append(DoAPIServerArgDefaulting([]string{}), args...)
+}

@@ -20,4 +20,10 @@ var _ = Describe("Apiserver", func() {
 			"--one", "--two=2",
 		}))
 	})
+
+	It("appends Args to defaults", func() {
+		argsOnTopOfDefault := []string{"--one", "--two=2"}
+		resultingArgs := DoAPIServerArgAppendingToDefaults(argsOnTopOfDefault)
+		Expect(resultingArgs).To(BeEquivalentTo(append(APIServerDefaultArgs, argsOnTopOfDefault...)))
+	})
 })
