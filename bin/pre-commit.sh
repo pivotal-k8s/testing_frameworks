@@ -27,7 +27,7 @@ go vet -all ./...
 rc=$((rc || $?))
 
 echo "Installing test binaries"
-./integration/scripts/download-binaries.sh
+./lightweight/scripts/download-binaries.sh
 rc=$((rc || $?))
 
 echo "Running go test"
