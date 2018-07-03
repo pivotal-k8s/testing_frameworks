@@ -1,18 +1,6 @@
-// Package cluster is a Test Cluster Framework -- see the motivating
-// document here:
-// https://docs.google.com/document/d/13bMjmWpsdkgbY-JayrcU-e_QNwRJCP-rHjtqdeeoQHo/edit?ts=5aa005c9#heading=h.75awtuvlo3ad
-//
-// This package aims to provide a consistent abstraction over a number
-// of different ways of creating kubernetes clusters for testing.
-//
-// To make your test cluster compatible with this framework, just
-// implement the Fixture interface.  If you require more config
-// options than we have so far, add them to the Config struct. Bear in
-// mind while doing so that we aim to maintain compatibility with
-// kubeadm, so if your new config options describe properties that
-// already exist in the kubeadm config, you should use
-// kubeadm-compatibile terminology.
-package cluster
+// Package lightweight holds the configuration extensions for the lightweight
+// test cluster implementation.
+package lightweight
 
 import (
 	"io"
@@ -20,30 +8,30 @@ import (
 	"time"
 )
 
-// LightWeightMasterConfig is a struct used as a nested struct in `Config` to
-// add aditional configuration properties needed by the "lightweight"
+// MasterConfigurationExtension is a struct used as a nested struct in `Config` to
+// add additional configuration properties needed by the "lightweight"
 // implementation to the main `Config` struct.
-type LightWeightMasterConfig struct {
+type MasterConfigurationExtension struct {
 	// APIServerProcessConfig hold configuration properties related to the
 	// APIServer process.
 	APIServerProcessConfig ProcessConfig
 }
 
-// LightWeightEtcd is a struct used as a nested struct in `Etcd` to
-// add aditional configuration properties needed by the "lightweight"
+// EtcdExtension is a struct used as a nested struct in `Etcd` to
+// add additional configuration properties needed by the "lightweight"
 // implementation to the main `Etcd` struct.
-type LightWeightEtcd struct {
+type EtcdExtension struct {
 	// ProcessConfig holds configuration properties releated to the Etcd progress
 	ProcessConfig ProcessConfig
 
-	// BindURL is the URL Etcd should bind to
+	// BindURL is the URL Etcd should bind to.
 	BindURL *url.URL
 }
 
-// LightWeightAPI is a struct used as a nested struct in `API` to
-// add aditional configuration properties needed by the "lightweight"
+// APIExtension is a struct used as a nested struct in `API` to
+// add additional configuration properties needed by the "lightweight"
 // implementation to the main `API` struct.
-type LightWeightAPI struct {
+type APIExtension struct {
 	// BindURL is a URL the API should listen on.
 	//
 	// If this is kept empty, it will be defaulted to a free port on "localhost".

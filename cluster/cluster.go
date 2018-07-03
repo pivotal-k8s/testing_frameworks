@@ -18,6 +18,7 @@ import (
 	"net/url"
 
 	"sigs.k8s.io/testing_frameworks/cluster/type/base"
+	"sigs.k8s.io/testing_frameworks/cluster/type/lightweight"
 )
 
 // Fixture is some kind of test cluster fixture, which can be started, interacted with, and stopped.
@@ -57,13 +58,10 @@ func DoDefaulting(c Config) Config {
 }
 
 // Config is a struct into which you can parse a YAML or JSON config
-// file (which should always be compatible with
-// https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#config-file
-// ) to describe your test cluster.
+// file to describe your test cluster.
 //
-// To maintain compatibility with kubeadm, we should follow the
-// patterns established in
-// https://github.com/kubernetes/kubernetes/blob/c8cded58d71e36665bd345a70fbe404e7523abb8/cmd/kubeadm/app/apis/kubeadm/types.go#L30
+// It consists of the a base MasterConfig and additional configuration
+// extensions for different test cluster implementations.
 type Config struct {
 	// Etcd holds configuration for etcd.
 	Etcd Etcd
@@ -71,34 +69,24 @@ type Config struct {
 	// API holds configuration for the k8s apiserver.
 	API API
 
-	// KubeadmMasterConfig is the nested struct holding all the configuration
-	// supported by kubeadm
 	base.MasterConfiguration
-
-	// LightWeightMasterConfig is the nested struct holding all the configuration
-	// additionally supported by the "lightweight" framework
-	LightWeightMasterConfig
+	lightweight.MasterConfigurationExtension
 }
 
 // Etcd contains elements describing Etcd configuration.
-// See also https://github.com/kubernetes/kubernetes/blob/c8cded58d71e36665bd345a70fbe404e7523abb8/cmd/kubeadm/app/apis/kubeadm/types.go#L163
+//
+// It consists of a base Etcd and additional configuration
+// extensions for different test cluster implementations.
 type Etcd struct {
-	// KubeadmEtcd is the nexted struct holding all the configuration for etcd
-	// supported by kubeadm
 	base.Etcd
-
-	// LightWeightEtcd is the nested struct holding all the configuration
-	// additionally supported by the "lightweight" framework
-	LightWeightEtcd
+	lightweight.EtcdExtension
 }
 
-// API struct contains elements of API server address.
+// API contains elements describing APIServer configuration.
+//
+// It consists of a base API struct and additional configuration extensions for
+// different test cluster implementations.
 type API struct {
-	// KubeadmAPI is the nested struct holding all the configuration for the API
-	// server address supported by kubeadm.
 	base.API
-
-	// LightWeightAPI is the nested struct holding all addirional configuration
-	// for the API server adress supported by the "lightweight" framework.
-	LightWeightAPI
+	lightweight.APIExtension
 }
