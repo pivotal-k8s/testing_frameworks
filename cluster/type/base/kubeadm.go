@@ -16,14 +16,12 @@ limitations under the License.
 
 package base
 
-import (
-	// TODO 	fuzz "github.com/google/gofuzz"
+// TODO 	fuzz "github.com/google/gofuzz"
 
-	// TODO 	v1 "k8s.io/api/core/v1"
-	// TODO 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kubeletconfigv1beta1 "k8s.io/kubernetes/pkg/kubelet/apis/kubeletconfig/v1beta1"
-	kubeproxyconfigv1alpha1 "k8s.io/kubernetes/pkg/proxy/apis/kubeproxyconfig/v1alpha1"
-)
+// TODO 	v1 "k8s.io/api/core/v1"
+// TODO 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+// TODO 	kubeletconfigv1beta1 "k8s.io/kubernetes/pkg/kubelet/apis/kubeletconfig/v1beta1"
+// TODO 	kubeproxyconfigv1alpha1 "k8s.io/kubernetes/pkg/proxy/apis/kubeproxyconfig/v1alpha1"
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -300,7 +298,7 @@ type NodeConfiguration struct {
 
 // KubeletConfiguration contains elements describing initial remote configuration of kubelet.
 type KubeletConfiguration struct {
-	BaseConfig *kubeletconfigv1beta1.KubeletConfiguration
+	// TODO 	BaseConfig *kubeletconfigv1beta1.KubeletConfiguration
 }
 
 // GetControlPlaneImageRepository returns name of image repository
@@ -333,7 +331,7 @@ type HostPathMount struct {
 
 // KubeProxy contains elements describing the proxy configuration.
 type KubeProxy struct {
-	Config *kubeproxyconfigv1alpha1.KubeProxyConfiguration
+	// TODO 	Config *kubeproxyconfigv1alpha1.KubeProxyConfiguration
 }
 
 // AuditPolicyConfiguration holds the options for configuring the api server audit policy.

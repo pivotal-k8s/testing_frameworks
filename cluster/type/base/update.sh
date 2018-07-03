@@ -21,6 +21,8 @@ getReplacements() {
 s@\(^[^/].*\bfuzz\b.*\)@// TODO \1@g
 s@\(^[^/].*\bmetav1\b.*\)@// TODO \1@g
 s@\(^[^/].*\bv1\b.*\)@// TODO \1@g
+s@\(^[^/].*\bkubeletconfigv1beta1\b.*\)@// TODO \1@g
+s@\(^[^/].*\bkubeproxyconfigv1alpha1\b.*\)@// TODO \1@g
 
 EOF
 }
