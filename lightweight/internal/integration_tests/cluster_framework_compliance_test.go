@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"sigs.k8s.io/testing_frameworks/cluster"
+	"sigs.k8s.io/testing_frameworks/cluster/type/base"
 	"sigs.k8s.io/testing_frameworks/lightweight"
 )
 
@@ -42,7 +43,9 @@ var _ = Describe("Cluster Framework Compliance", func() {
 		fixture = &lightweight.ControlPlane{}
 
 		config := cluster.Config{}
-		config.Etcd.DataDir = dataDir
+		config.Etcd.Local = &base.LocalEtcd{
+			DataDir: dataDir,
+		}
 
 		err = fixture.Setup(config)
 		Expect(err).NotTo(HaveOccurred())

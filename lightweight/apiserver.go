@@ -31,15 +31,17 @@ func (s *APIServer) Start() error {
 
 	var err error
 
+	clusterConf := cluster.DoDefaulting(s.ClusterConfig)
+
 	s.processState = &internal.ProcessState{}
 
 	s.processState.DefaultedProcessInput, err = internal.DoDefaulting(
 		"kube-apiserver",
-		s.ClusterConfig.API.BindURL,
-		s.ClusterConfig.CertificatesDir,
-		s.ClusterConfig.APIServerProcessConfig.Path,
-		s.ClusterConfig.APIServerProcessConfig.StartTimeout,
-		s.ClusterConfig.APIServerProcessConfig.StopTimeout,
+		clusterConf.API.BindURL,
+		clusterConf.CertificatesDir,
+		clusterConf.APIServerProcessConfig.Path,
+		clusterConf.APIServerProcessConfig.StartTimeout,
+		clusterConf.APIServerProcessConfig.StopTimeout,
 	)
 	if err != nil {
 		return err
@@ -57,7 +59,7 @@ func (s *APIServer) Start() error {
 		s.processState.Dir,
 	}
 
-	args := flattenArgs(s.ClusterConfig.APIServerExtraArgs)
+	args := flattenArgs(clusterConf.APIServerExtraArgs)
 
 	s.processState.Args, err = internal.RenderTemplates(
 		internal.DoAPIServerArgDefaulting(args), tmplData,
@@ -67,8 +69,8 @@ func (s *APIServer) Start() error {
 	}
 
 	return s.processState.Start(
-		s.ClusterConfig.APIServerProcessConfig.Out,
-		s.ClusterConfig.APIServerProcessConfig.Err,
+		clusterConf.APIServerProcessConfig.Out,
+		clusterConf.APIServerProcessConfig.Err,
 	)
 }
 

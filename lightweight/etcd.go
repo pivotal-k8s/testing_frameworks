@@ -21,15 +21,17 @@ type Etcd struct {
 func (e *Etcd) Start() error {
 	var err error
 
+	clusterConf := cluster.DoDefaulting(e.ClusterConfig)
+
 	e.processState = &internal.ProcessState{}
 
 	e.processState.DefaultedProcessInput, err = internal.DoDefaulting(
 		"etcd",
-		e.ClusterConfig.Etcd.BindURL,
-		e.ClusterConfig.Etcd.DataDir,
-		e.ClusterConfig.Etcd.ProcessConfig.Path,
-		e.ClusterConfig.Etcd.ProcessConfig.StartTimeout,
-		e.ClusterConfig.Etcd.ProcessConfig.StopTimeout,
+		clusterConf.Etcd.BindURL,
+		clusterConf.Etcd.Local.DataDir,
+		clusterConf.Etcd.ProcessConfig.Path,
+		clusterConf.Etcd.ProcessConfig.StartTimeout,
+		clusterConf.Etcd.ProcessConfig.StopTimeout,
 	)
 	if err != nil {
 		return err
@@ -45,7 +47,7 @@ func (e *Etcd) Start() error {
 		e.processState.Dir,
 	}
 
-	args := flattenArgs(e.ClusterConfig.Etcd.ExtraArgs)
+	args := flattenArgs(clusterConf.Etcd.Local.ExtraArgs)
 
 	e.processState.Args, err = internal.RenderTemplates(
 		internal.DoEtcdArgDefaulting(args), tmplData,
@@ -55,8 +57,8 @@ func (e *Etcd) Start() error {
 	}
 
 	return e.processState.Start(
-		e.ClusterConfig.Etcd.ProcessConfig.Out,
-		e.ClusterConfig.Etcd.ProcessConfig.Err,
+		clusterConf.Etcd.ProcessConfig.Out,
+		clusterConf.Etcd.ProcessConfig.Err,
 	)
 }
 

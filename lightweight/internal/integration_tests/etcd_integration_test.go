@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"sigs.k8s.io/testing_frameworks/cluster"
+	"sigs.k8s.io/testing_frameworks/cluster/type/base"
 	. "sigs.k8s.io/testing_frameworks/lightweight"
 )
 
@@ -35,8 +36,10 @@ var _ = Describe("Etcd", func() {
 		stderr := &bytes.Buffer{}
 
 		config := cluster.Config{}
-		config.Etcd.ExtraArgs = map[string]string{
-			"--help": "",
+		config.Etcd.Local = &base.LocalEtcd{
+			ExtraArgs: map[string]string{
+				"--help": "",
+			},
 		}
 		config.Etcd.ProcessConfig.Out = stdout
 		config.Etcd.ProcessConfig.Err = stderr

@@ -16,6 +16,8 @@ package cluster
 
 import (
 	"net/url"
+
+	"sigs.k8s.io/testing_frameworks/cluster/type/base"
 )
 
 // Fixture is some kind of test cluster fixture, which can be started, interacted with, and stopped.
@@ -47,6 +49,13 @@ type Fixture interface {
 	ClientConfig() *url.URL
 }
 
+func DoDefaulting(c Config) Config {
+	if c.Etcd.Local == nil {
+		c.Etcd.Local = &base.LocalEtcd{}
+	}
+	return c
+}
+
 // Config is a struct into which you can parse a YAML or JSON config
 // file (which should always be compatible with
 // https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#config-file
@@ -64,7 +73,7 @@ type Config struct {
 
 	// KubeadmMasterConfig is the nested struct holding all the configuration
 	// supported by kubeadm
-	KubeadmMasterConfig
+	base.MasterConfiguration
 
 	// LightWeightMasterConfig is the nested struct holding all the configuration
 	// additionally supported by the "lightweight" framework
@@ -76,7 +85,7 @@ type Config struct {
 type Etcd struct {
 	// KubeadmEtcd is the nexted struct holding all the configuration for etcd
 	// supported by kubeadm
-	KubeadmEtcd
+	base.Etcd
 
 	// LightWeightEtcd is the nested struct holding all the configuration
 	// additionally supported by the "lightweight" framework
@@ -87,7 +96,7 @@ type Etcd struct {
 type API struct {
 	// KubeadmAPI is the nested struct holding all the configuration for the API
 	// server address supported by kubeadm.
-	KubeadmAPI
+	base.API
 
 	// LightWeightAPI is the nested struct holding all addirional configuration
 	// for the API server adress supported by the "lightweight" framework.
