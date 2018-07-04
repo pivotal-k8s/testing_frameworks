@@ -57,6 +57,19 @@ func DoDefaulting(c Config) Config {
 	return c
 }
 
+// Those type aliases are only used to work around the 'duplicate field' error
+// while allowing the packages which define those nested types to still use the
+// same names.
+//
+// When new types to be nested are introduced they can still be called e.g.
+// `MasterConfiguration` or `Etcd` in their package. We can just use the type
+// aliases here and use those to nest into the "main" structs.
+type (
+	lightweightMasterConfiguration = lightweight.MasterConfiguration
+	lightweightEtcd                = lightweight.Etcd
+	lightweightAPI                 = lightweight.API
+)
+
 // Config is a struct into which you can parse a YAML or JSON config
 // file to describe your test cluster.
 //
@@ -70,7 +83,7 @@ type Config struct {
 	API API
 
 	base.MasterConfiguration
-	lightweight.MasterConfigurationExtension
+	lightweightMasterConfiguration
 }
 
 // Etcd contains elements describing Etcd configuration.
@@ -79,7 +92,7 @@ type Config struct {
 // extensions for different test cluster implementations.
 type Etcd struct {
 	base.Etcd
-	lightweight.EtcdExtension
+	lightweightEtcd
 }
 
 // API contains elements describing APIServer configuration.
@@ -88,5 +101,5 @@ type Etcd struct {
 // different test cluster implementations.
 type API struct {
 	base.API
-	lightweight.APIExtension
+	lightweightAPI
 }

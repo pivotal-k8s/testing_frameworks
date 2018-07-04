@@ -8,19 +8,19 @@ import (
 	"time"
 )
 
-// MasterConfigurationExtension is a struct used as a nested struct in `Config` to
+// MasterConfiguration is a struct used as a nested struct in `Config` to
 // add additional configuration properties needed by the "lightweight"
 // implementation to the main `Config` struct.
-type MasterConfigurationExtension struct {
+type MasterConfiguration struct {
 	// APIServerProcessConfig hold configuration properties related to the
 	// APIServer process.
 	APIServerProcessConfig ProcessConfig
 }
 
-// EtcdExtension is a struct used as a nested struct in `Etcd` to
+// Etcd is a struct used as a nested struct in `Etcd` to
 // add additional configuration properties needed by the "lightweight"
 // implementation to the main `Etcd` struct.
-type EtcdExtension struct {
+type Etcd struct {
 	// ProcessConfig holds configuration properties releated to the Etcd progress
 	ProcessConfig ProcessConfig
 
@@ -28,10 +28,10 @@ type EtcdExtension struct {
 	BindURL *url.URL
 }
 
-// APIExtension is a struct used as a nested struct in `API` to
+// API is a struct used as a nested struct in `API` to
 // add additional configuration properties needed by the "lightweight"
 // implementation to the main `API` struct.
-type APIExtension struct {
+type API struct {
 	// BindURL is a URL the API should listen on.
 	//
 	// If this is kept empty, it will be defaulted to a free port on "localhost".
