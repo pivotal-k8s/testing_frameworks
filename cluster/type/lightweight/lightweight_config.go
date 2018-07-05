@@ -62,3 +62,20 @@ type ProcessConfig struct {
 	Out io.Writer
 	Err io.Writer
 }
+
+// NodeType holds the description of a specific node type.
+//
+// Right now, a node is just described by the implementation of the kubelet it
+// runs.
+type NodeType struct {
+	KubeletType KubeletType
+}
+
+// KubeletType describes the implemnetation type of the a kubelet.
+type KubeletType int
+
+const (
+	KubeletTypeDefault KubeletType = iota
+	KubeletTypeHollowNode
+	KubeletTypeVirtualKubelet
+)

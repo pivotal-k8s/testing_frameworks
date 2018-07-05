@@ -10,6 +10,7 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"sigs.k8s.io/testing_frameworks/cluster"
 	"sigs.k8s.io/testing_frameworks/cluster/type/base"
+	types "sigs.k8s.io/testing_frameworks/cluster/type/lightweight"
 	"sigs.k8s.io/testing_frameworks/lightweight"
 )
 
@@ -85,7 +86,7 @@ var _ = Describe("Cluster Framework Compliance", func() {
 			"--some-silly-arg": "",
 		}
 
-		fixture := &lightweight.ControlPlane{
+		fixture = &lightweight.ControlPlane{
 			APIServer: &lightweight.APIServer{
 				ClusterConfig: config,
 			},
@@ -93,5 +94,20 @@ var _ = Describe("Cluster Framework Compliance", func() {
 
 		Expect(fixture.Setup(config)).NotTo(Succeed())
 		Expect(stdErr).To(gbytes.Say("some-silly-arg"))
+	})
+
+	It("Supports a shape with multiple node sets", func() {
+		nsHollow := cluster.NodeSet{Count: 1}
+		nsHollow.KubeletType = types.KubeletTypeHollowNode
+
+		nsVKubelet := cluster.NodeSet{Count: 1}
+		nsVKubelet.KubeletType = types.KubeletTypeVirtualKubelet
+
+		config := cluster.Config{}
+		config.Shape.NodeSets = []cluster.NodeSet{nsHollow, nsVKubelet}
+
+		fixture = &lightweight.ControlPlane{}
+
+		Expect(fixture.Setup(config)).To(Succeed())
 	})
 })

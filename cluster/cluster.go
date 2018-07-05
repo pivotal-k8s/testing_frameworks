@@ -18,6 +18,7 @@ import (
 	"net/url"
 
 	"sigs.k8s.io/testing_frameworks/cluster/type/base"
+	"sigs.k8s.io/testing_frameworks/cluster/type/example"
 	"sigs.k8s.io/testing_frameworks/cluster/type/lightweight"
 )
 
@@ -68,6 +69,9 @@ type (
 	lightweightMasterConfiguration = lightweight.MasterConfiguration
 	lightweightEtcd                = lightweight.Etcd
 	lightweightAPI                 = lightweight.API
+	lightweightNodeType            = lightweight.NodeType
+
+	exampleNodeType = example.NodeType
 )
 
 // Config is a struct into which you can parse a YAML or JSON config
@@ -81,6 +85,9 @@ type Config struct {
 
 	// API holds configuration for the k8s apiserver.
 	API API
+
+	// Shape describes the shape of a cluster.
+	Shape Shape
 
 	base.MasterConfiguration
 	lightweightMasterConfiguration
@@ -102,4 +109,20 @@ type Etcd struct {
 type API struct {
 	base.API
 	lightweightAPI
+}
+
+// Shape describs the shape of a cluster to be brought up.
+type Shape struct {
+	// NodeSets is describing which types of nodes the cluster should be
+	// brought up with.
+	NodeSets []NodeSet
+}
+
+// NodeSet describs a group of nodes which have equal properties.
+type NodeSet struct {
+	// Count is the size of a NodeSet
+	Count int
+
+	lightweightNodeType
+	exampleNodeType
 }

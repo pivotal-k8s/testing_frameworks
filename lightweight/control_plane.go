@@ -14,6 +14,7 @@ import (
 type ControlPlane struct {
 	APIServer *APIServer
 	Etcd      *Etcd
+	Nodes     []*Node
 }
 
 // Setup will start your control plane processes according to the
@@ -26,6 +27,15 @@ func (f *ControlPlane) Setup(config cluster.Config) error {
 		f.APIServer = &APIServer{}
 	}
 	f.APIServer.ClusterConfig = config
+
+	for _, set := range config.Shape.NodeSets {
+		for n := 1; n <= set.Count; n++ {
+			f.Nodes = append(f.Nodes, &Node{
+				ClusterConfig: config,
+				KubeletType:   set.KubeletType,
+			})
+		}
+	}
 
 	return f.Start()
 }
@@ -43,7 +53,17 @@ func (f *ControlPlane) Start() error {
 		f.APIServer = &APIServer{}
 	}
 	f.APIServer.EtcdURL = &f.Etcd.processState.URL
-	return f.APIServer.Start()
+	if err := f.APIServer.Start(); err != nil {
+		return err
+	}
+
+	for _, n := range f.Nodes {
+		if err := n.Start(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // TearDown will stop your control plane processes. This is an alias for Stop()
@@ -53,6 +73,11 @@ func (f *ControlPlane) TearDown() error {
 
 // Stop will stop your control plane processes, and clean up their data.
 func (f *ControlPlane) Stop() error {
+	for _, node := range f.Nodes {
+		if err := node.Stop(); err != nil {
+			return err
+		}
+	}
 	if f.APIServer != nil {
 		if err := f.APIServer.Stop(); err != nil {
 			return err
