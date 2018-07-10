@@ -28,13 +28,10 @@ func (f *ControlPlane) Setup(config cluster.Config) error {
 	}
 	f.APIServer.ClusterConfig = config
 
-	for _, set := range config.Shape.NodeSets {
-		for n := 1; n <= set.Count; n++ {
-			f.Nodes = append(f.Nodes, &Node{
-				ClusterConfig: config,
-				KubeletType:   set.KubeletType,
-			})
-		}
+	for i := 1; i <= config.Shape.NodeCount; i++ {
+		f.Nodes = append(f.Nodes, &Node{
+			ClusterConfig: config,
+		})
 	}
 
 	return f.Start()

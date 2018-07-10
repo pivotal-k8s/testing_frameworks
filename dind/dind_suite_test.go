@@ -1,0 +1,13 @@
+package dind_test
+
+import (
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+func TestDind(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Dind Suite")
+}
