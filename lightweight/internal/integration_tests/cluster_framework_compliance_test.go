@@ -10,7 +10,6 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"sigs.k8s.io/testing_frameworks/cluster"
 	"sigs.k8s.io/testing_frameworks/cluster/type/base"
-	types "sigs.k8s.io/testing_frameworks/cluster/type/lightweight"
 	"sigs.k8s.io/testing_frameworks/lightweight"
 )
 
@@ -97,14 +96,8 @@ var _ = Describe("Cluster Framework Compliance", func() {
 	})
 
 	It("Supports a shape with multiple node sets", func() {
-		nsHollow := cluster.NodeSet{Count: 1}
-		nsHollow.KubeletType = types.KubeletTypeHollowNode
-
-		nsVKubelet := cluster.NodeSet{Count: 1}
-		nsVKubelet.KubeletType = types.KubeletTypeVirtualKubelet
-
 		config := cluster.Config{}
-		config.Shape.NodeSets = []cluster.NodeSet{nsHollow, nsVKubelet}
+		config.Shape.NodeCount = 2
 
 		fixture = &lightweight.ControlPlane{}
 
