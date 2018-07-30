@@ -13,15 +13,15 @@ var _ = Describe("BinPathFinder", func() {
 			previousAssetsPath string
 		)
 		BeforeEach(func() {
-			previousAssetsPath = assetsPath
-			assetsPath = "/some/path/assets/bin"
+			previousAssetsPath = rootPath
+			rootPath = "/some/path"
 		})
 		AfterEach(func() {
-			assetsPath = previousAssetsPath
+			rootPath = previousAssetsPath
 		})
 		It("returns the default path when no env var is configured", func() {
-			binPath := BinPathFinder("some_bin")
-			Expect(binPath).To(Equal("/some/path/assets/bin/some_bin"))
+			binPath := BinPathFinder("some_part", "some_bin")
+			Expect(binPath).To(Equal("/some/path/some_part/assets/bin/some_bin"))
 		})
 	})
 
@@ -46,20 +46,20 @@ var _ = Describe("BinPathFinder", func() {
 			}
 		})
 		It("returns the path from the env", func() {
-			binPath := BinPathFinder("another_symbolic_name")
+			binPath := BinPathFinder("does_not_matter", "another_symbolic_name")
 			Expect(binPath).To(Equal("/path/to/some_bin.exe"))
 		})
 
 		It("sanitizes the environment variable name", func() {
 			By("cleaning all non-underscore punctuation")
-			binPath := BinPathFinder("another-symbolic name")
+			binPath := BinPathFinder("does_not_matter", "another-symbolic name")
 			Expect(binPath).To(Equal("/path/to/some_bin.exe"))
-			binPath = BinPathFinder("another+symbolic\\name")
+			binPath = BinPathFinder("does_not_matter", "another+symbolic\\name")
 			Expect(binPath).To(Equal("/path/to/some_bin.exe"))
-			binPath = BinPathFinder("another=symbolic.name")
+			binPath = BinPathFinder("does_not_matter", "another=symbolic.name")
 			Expect(binPath).To(Equal("/path/to/some_bin.exe"))
 			By("removing numbers from the beginning of the name")
-			binPath = BinPathFinder("12another_symbolic_name")
+			binPath = BinPathFinder("does_not_matter", "12another_symbolic_name")
 			Expect(binPath).To(Equal("/path/to/some_bin.exe"))
 		})
 	})

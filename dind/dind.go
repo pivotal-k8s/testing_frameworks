@@ -12,6 +12,7 @@ import (
 	"os/exec"
 
 	"sigs.k8s.io/testing_frameworks/cluster"
+	"sigs.k8s.io/testing_frameworks/internal"
 )
 
 type Dind struct {
@@ -49,7 +50,7 @@ func (d *Dind) TearDown() error {
 }
 
 func (d *Dind) clusterCmd(args ...string) *exec.Cmd {
-	binPath := "/Users/pivotal/workspace/kubeadm-dind-cluster/dind-cluster.sh"
+	binPath := internal.BinPathFinder("dind", "dind-cluster.sh")
 	return exec.Command(binPath, args...) // #nosec
 }
 

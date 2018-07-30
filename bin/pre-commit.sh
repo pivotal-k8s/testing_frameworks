@@ -14,6 +14,10 @@ go_dirs() {
   go list -f '{{.Dir}}' ./... | tr '\n' '\0'
 }
 
+echo "Update submodules"
+git submodule update --init --recursive
+rc=$((rc || $?))
+
 echo "Running go fmt"
 diff <(echo -n) <(go_dirs | xargs -0 gofmt -s -d -l)
 rc=$((rc || $?))

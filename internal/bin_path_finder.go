@@ -8,19 +8,21 @@ import (
 	"strings"
 )
 
-var assetsPath string
+var rootPath string
 
 func init() {
 	_, thisFile, _, ok := runtime.Caller(0)
 	if !ok {
 		panic("Could not determine the path of the BinPathFinder")
 	}
-	assetsPath = filepath.Join(filepath.Dir(thisFile), "..", "assets", "bin")
+	rootPath = filepath.Join(filepath.Dir(thisFile), "..")
 }
 
-// BinPathFinder checks the an environment variable, derived from the symbolic name,
-// and falls back to a default assets location when this variable is not set
-func BinPathFinder(symbolicName string) (binPath string) {
+// BinPathFinder derives an environment variable based on the symbolic name;
+// if the environment variable is set, it uses its value as the binary path
+// if it's not set, it falls back to a default assets location in the
+// <containingDirectory>
+func BinPathFinder(containingDirectory, symbolicName string) (binPath string) {
 	punctuationPattern := regexp.MustCompile("[^A-Z0-9]+")
 	sanitizedName := punctuationPattern.ReplaceAllString(strings.ToUpper(symbolicName), "_")
 	leadingNumberPattern := regexp.MustCompile("^[0-9]+")
@@ -31,5 +33,5 @@ func BinPathFinder(symbolicName string) (binPath string) {
 		return val
 	}
 
-	return filepath.Join(assetsPath, symbolicName)
+	return filepath.Join(rootPath, containingDirectory, "assets", "bin", symbolicName)
 }

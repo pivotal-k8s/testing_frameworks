@@ -5,7 +5,7 @@ import (
 	"io"
 	"os/exec"
 
-	"sigs.k8s.io/testing_frameworks/lightweight/internal"
+	"sigs.k8s.io/testing_frameworks/internal"
 )
 
 // KubeCtl is a wrapper around the kubectl binary.
@@ -30,7 +30,7 @@ type KubeCtl struct {
 // stderr.
 func (k *KubeCtl) Run(args ...string) (stdout, stderr io.Reader, err error) {
 	if k.Path == "" {
-		k.Path = internal.BinPathFinder("kubectl")
+		k.Path = internal.BinPathFinder("lightweight", "kubectl")
 	}
 
 	stdoutBuffer := &bytes.Buffer{}

@@ -11,6 +11,8 @@ import (
 	"path"
 	"time"
 
+	"sigs.k8s.io/testing_frameworks/internal"
+
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
@@ -89,7 +91,7 @@ func DoDefaulting(
 		if name == "" {
 			return DefaultedProcessInput{}, fmt.Errorf("must have at least one of name or path")
 		}
-		defaults.Path = BinPathFinder(name)
+		defaults.Path = internal.BinPathFinder("lightweight", name)
 	}
 
 	if startTimeout == 0 {
