@@ -15,39 +15,71 @@ import (
 )
 
 var _ = Describe("Dind", func() {
+	var (
+		fixture *dind.Dind
+	)
+
+	AfterEach(func() {
+		Expect(fixture.TearDown()).To(Succeed())
+	})
+
+	It("sets up and tears down a dind cluster with default settings", func() {
+		fixture = &dind.Dind{}
+		fixture.Out = GinkgoWriter
+		fixture.Err = GinkgoWriter
+
+		config := cluster.Config{}
+		Expect(fixture.Setup(config)).To(Succeed())
+	})
+
 	It("setup and teardown a dind cluster", func() {
-		fixture := &dind.Dind{}
+		fixture = &dind.Dind{}
 		fixture.Out = GinkgoWriter
 		fixture.Err = GinkgoWriter
 
 		config := cluster.Config{}
 		config.API.BindURL = &url.URL{Scheme: "http", Host: "localhost:1234"}
-		config.Shape.NodeCount = 3
+		config.Shape.NodeCount = 2
 
 		Expect(fixture.Setup(config)).To(Succeed())
 
 		url := fixture.ClientConfig()
 		Expect(url.Port()).To(Equal("1234"))
 
-		kubectl := &lightweight.KubeCtl{}
-		kubectl.Opts = append(kubectl.Opts, fmt.Sprintf("--server=%s", url.Host))
-
-		stdout, stderr, err := kubectl.Run("get", "nodes", "-o", "json")
-
-		// io.Copy(GinkgoWriter, stdout)
-		io.Copy(GinkgoWriter, stderr)
+		kubectl := &dindKubeCtl{ContextName: fixture.ContextName()}
+		stdout, _, err := kubectl.Run("get", "nodes", "-o", "json")
 		Expect(err).NotTo(HaveOccurred())
 
 		nodes, err := parseNodes(stdout)
 		Expect(err).NotTo(HaveOccurred())
+		Expect(nodes.Items).To(HaveLen(3))
 
-		Expect(nodes.Items).To(HaveLen(4))
 		_, workerCount := countNodes(nodes)
-		Expect(workerCount).To(Equal(3))
-
-		Expect(fixture.Teardown()).To(Succeed())
+		Expect(workerCount).To(Equal(2))
 	})
 })
+
+type dindKubeCtl struct {
+	kubectl     *lightweight.KubeCtl
+	ContextName string
+}
+
+func (k *dindKubeCtl) Run(args ...string) (io.Reader, io.Reader, error) {
+	if k.kubectl == nil {
+		k.kubectl = &lightweight.KubeCtl{}
+	}
+
+	k.kubectl.Opts = append(
+		k.kubectl.Opts,
+		fmt.Sprintf("--context=%s", k.ContextName),
+	)
+
+	stdout, stderr, err := k.kubectl.Run(args...)
+	stdout = io.TeeReader(stdout, GinkgoWriter)
+	stderr = io.TeeReader(stderr, GinkgoWriter)
+
+	return stdout, stderr, err
+}
 
 func parseNodes(stdout io.Reader) (kubeNodes, error) {
 	nodes := kubeNodes{}
