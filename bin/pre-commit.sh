@@ -18,6 +18,10 @@ echo "Update submodules"
 git submodule update --init --recursive
 rc=$((rc || $?))
 
+echo "Verify Boilerplate"
+"${base_dir}/bin/verify-boilerplate.sh" --rootdir="$base_dir" --boilerplate-dir="${base_dir}/bin/boilerplate/"
+rc=$((rc || $?))
+
 echo "Running go fmt"
 diff <(echo -n) <(go_dirs | xargs -0 gofmt -s -d -l)
 rc=$((rc || $?))
