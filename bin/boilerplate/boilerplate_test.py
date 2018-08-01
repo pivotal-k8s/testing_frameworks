@@ -19,6 +19,7 @@ import unittest
 import StringIO
 import os
 import sys
+import tempfile
 
 base_dir = os.getcwd()
 
@@ -112,3 +113,9 @@ class TestBoilerplate(unittest.TestCase):
     passes = boilerplate.file_passes(filename, refs, regexes, files_to_skip)
 
     self.assertEqual(passes, True)
+
+  def test_ignore_when_no_valid_boilerplate_template(self):
+    with tempfile.NamedTemporaryFile() as temp_file_to_check:
+      passes = boilerplate.file_passes(temp_file_to_check.name, boilerplate.get_refs(), boilerplate.get_regexs(), [])
+      self.assertEqual(passes, True)
+

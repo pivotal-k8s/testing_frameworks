@@ -100,7 +100,10 @@ def file_passes(filename, refs, regexs, not_generated_files_to_skip):
     if extension != "":
         ref = refs[extension]
     else:
-        ref = refs[basename]
+        ref = refs.get(basename, None)
+
+    if ref == None:
+      return True
 
     # remove build tags from the top of Go files
     if extension == "go" or extension =="generatego":
