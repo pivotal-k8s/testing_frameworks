@@ -45,6 +45,11 @@ parser.add_argument(
     help="give verbose output regarding why a file does not pass",
     action="store_true")
 
+parser.add_argument(
+    "--ensure",
+    help="ensure all files which should have appropriate licence headers have them prepended",
+    action="store_true")
+
 args = parser.parse_args()
 
 verbose_out = sys.stderr if args.verbose else open("/dev/null", "w")
@@ -78,6 +83,26 @@ def is_generated_file(filename, data, regexs, files_to_skip):
     p = regexs["generated"]
     return p.search(data)
 
+def match_and_delete(content, re):
+  match = re.search(content)
+  if match == None:
+    return content, None
+  return re.sub("", content, 1), match.group()
+
+
+def replace_specials(content, extension, regexs):
+  # remove build tags from the top of Go files
+  if extension == "go" or extension =="generatego":
+    re = regexs["go_build_constraints"]
+    return match_and_delete(content, re)
+
+  # remove shebang from the top of shell files
+  if extension == "sh":
+    re = regexs["shebang"]
+    return match_and_delete(content, re)
+
+  return content, None
+
 def file_passes(filename, refs, regexs, not_generated_files_to_skip):
     try:
         f = open(filename, 'r')
@@ -88,32 +113,15 @@ def file_passes(filename, refs, regexs, not_generated_files_to_skip):
     data = f.read()
     f.close()
 
-    # determine if the file is automatically generated
-    generated = is_generated_file(filename, data, regexs, not_generated_files_to_skip)
+    ref, extension, generated = analyze_file(filename, data, refs, regexs, not_generated_files_to_skip)
 
-    basename = os.path.basename(filename)
-    if generated:
-        extension = "generatego"
-    else:
-        extension = file_extension(filename)
+    return file_content_passes(data, filename, ref, extension, generated, regexs)
 
-    if extension != "":
-        ref = refs[extension]
-    else:
-        ref = refs.get(basename, None)
-
+def file_content_passes(data, filename, ref, extension, generated, regexs):
     if ref == None:
       return True
 
-    # remove build tags from the top of Go files
-    if extension == "go" or extension =="generatego":
-        p = regexs["go_build_constraints"]
-        (data, found) = p.subn("", data, 1)
-
-    # remove shebang from the top of shell files
-    if extension == "sh":
-        p = regexs["shebang"]
-        (data, found) = p.subn("", data, 1)
+    data, _ = replace_specials(data, extension, regexs)
 
     data = data.splitlines()
 
@@ -206,6 +214,53 @@ def get_files(extensions, dirs_to_skip):
             outfiles.append(pathname)
     return outfiles
 
+def analyze_file(file_name, file_content, refs, regexs, not_generated_files_to_skip):
+    # determine if the file is automatically generated
+    generated = is_generated_file(file_name, file_content, regexs, not_generated_files_to_skip)
+
+    base_name = os.path.basename(file_name)
+    if generated:
+        extension = "generatego"
+    else:
+        extension = file_extension(file_name)
+
+    if extension != "":
+        ref = refs[extension]
+    else:
+        ref = refs.get(base_name, None)
+
+    return ref, extension, generated
+
+def ensure_boilerplate_file(file_name, refs, regexs, not_generated_files_to_skip):
+  with open(file_name, mode='r+') as f:
+    file_content = f.read()
+
+    ref, extension, generated = analyze_file(file_name, file_content, refs, regexs, not_generated_files_to_skip)
+
+    # licence header
+    licence_header = os.linesep.join(ref)
+
+    # content without shebang and such
+    content_without_specials, special_header = replace_specials(file_content, extension, regexs)
+
+    # new content, to be writen to the file
+    new_content = ''
+
+    # shebang and such
+    if special_header != None:
+      new_content += special_header
+
+    # licence header
+    current_year = str(datetime.datetime.now().year)
+    year_replacer = regexs['year']
+    new_content += year_replacer.sub(current_year, licence_header, 1)
+
+    # actual content
+    new_content += os.linesep + content_without_specials
+
+    f.seek(0)
+    f.write(new_content)
+
 def get_dates():
     years = datetime.datetime.now().year
     return '(%s)' % '|'.join((str(year) for year in range(2014, years+1)))
@@ -232,10 +287,16 @@ def main():
     regexs = get_regexs()
     refs = get_refs()
     filenames = get_files(refs.keys(), config.get('dirs_to_skip'))
+    not_generated_files_to_skip = config.get('not_generated_files_to_skip', [])
 
     for filename in filenames:
-        if not file_passes(filename, refs, regexs, config.get('not_generated_files_to_skip')):
-            print(filename, file=sys.stdout)
+      if not file_passes(filename, refs, regexs, not_generated_files_to_skip):
+        if args.ensure:
+          print("adding boilerplate header to %s" % filename )
+          ensure_boilerplate_file(filename, refs, regexs, not_generated_files_to_skip)
+        else:
+          print(filename, file=sys.stdout)
+
 
     return 0
 

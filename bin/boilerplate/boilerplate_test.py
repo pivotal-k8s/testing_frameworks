@@ -14,12 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
 import boilerplate
 import unittest
 import StringIO
 import os
 import sys
 import tempfile
+import re
+from contextlib import contextmanager
 
 base_dir = os.getcwd()
 
@@ -29,6 +32,7 @@ class DefaultArgs(object):
     self.rootdir = "."
     self.boilerplate_dir = base_dir
     self.verbose = True
+    self.ensure = False
 
 class TestBoilerplate(unittest.TestCase):
   """
@@ -54,7 +58,7 @@ class TestBoilerplate(unittest.TestCase):
     sys.stdout = old_stdout
 
     self.assertEquals(
-        output, ['././fail.go', '././fail.py'])
+        output, ['././fail.go', '././fail.py', '././fail.sh'])
 
   def test_read_config(self):
     config_file = "./test_with_config_file/boilerplate.json"
@@ -74,28 +78,11 @@ class TestBoilerplate(unittest.TestCase):
       boilerplate.read_config_file(config_file)
 
   def test_read_config_called_with_correct_path(self):
-    self.has_been_called = False
-
-    def fake_read_config_file(config_file_path):
-      self.assertEqual(config_file_path, "/tmp/some/path/boilerplate.json")
-      self.has_been_called = True
-      return {}
-
-    def nonParallelSafeSetUp():
-      self.real_read_config_file = boilerplate.read_config_file
-      boilerplate.read_config_file = fake_read_config_file
-
-    def nonParallelSafeTearDown():
-      boilerplate.read_config_file = self.real_read_config_file
-
-    nonParallelSafeSetUp()
-
-    try:
-      boilerplate.args.rootdir = "/tmp/some/path"
+    boilerplate.args.rootdir = "/tmp/some/path"
+    with simple_mocker('read_config_file', boilerplate, return_value={}) as mock_args:
       boilerplate.main()
-      self.assertEqual(self.has_been_called, True)
-    finally:
-      nonParallelSafeTearDown()
+      self.assertEqual(len(mock_args), 1)
+      self.assertEqual(mock_args[0][0], "/tmp/some/path/boilerplate.json")
 
   def test_get_files_with_skipping_dirs(self):
     refs = boilerplate.get_refs()
@@ -119,3 +106,89 @@ class TestBoilerplate(unittest.TestCase):
       passes = boilerplate.file_passes(temp_file_to_check.name, boilerplate.get_refs(), boilerplate.get_regexs(), [])
       self.assertEqual(passes, True)
 
+  def test_add_boilerplate_to_file(self):
+    with tmp_copy("./test/fail.sh", suffix='.sh') as tmp_file_name:
+      boilerplate.ensure_boilerplate_file(
+        tmp_file_name, boilerplate.get_refs(), boilerplate.get_regexs(), []
+      )
+
+      passes = boilerplate.file_passes(tmp_file_name, boilerplate.get_refs(), boilerplate.get_regexs(), [])
+      self.assertEqual(passes, True)
+
+      with open(tmp_file_name) as x:
+        first_line = x.read().splitlines()[0]
+        self.assertEqual(first_line, '#!/usr/bin/env bash')
+
+  def test_replace_specials(self):
+    extension = "sh"
+    regexs = boilerplate.get_regexs()
+
+    original_content = "\n".join([
+      "#!/usr/bin/env bash",
+      "",
+      "something something",
+      "#!/usr/bin/env bash",
+    ])
+    expected_content = "\n".join([
+      "something something",
+      "#!/usr/bin/env bash",
+    ])
+    expected_match = "\n".join([
+      "#!/usr/bin/env bash",
+      "\n",
+    ])
+
+    actual_content, actual_match = boilerplate.replace_specials(
+      original_content, extension, regexs
+    )
+
+    self.assertEquals(actual_content, expected_content)
+    self.assertEquals(actual_match, expected_match)
+
+  def test_ensure_command_line_flag(self):
+    os.chdir("./test")
+    boilerplate.args.ensure = True
+
+    with simple_mocker('ensure_boilerplate_file', boilerplate) as mock_args:
+      boilerplate.main()
+      changed_files = list(map(lambda x : x[0], mock_args))
+      self.assertEquals(changed_files, [
+        "././fail.sh",
+        "././fail.py",
+        "././fail.go",
+      ])
+
+@contextmanager
+def tmp_copy(file_org, suffix=None):
+  file_copy_fd, file_copy = tempfile.mkstemp(suffix)
+
+  with open(file_org) as org:
+    os.write(file_copy_fd, org.read())
+    os.close(file_copy_fd)
+
+  yield file_copy
+
+  os.unlink(file_copy)
+
+@contextmanager
+def simple_mocker(function_name, original_holder, return_value=None):
+  # save original
+  original_implementation = getattr(original_holder, function_name)
+
+  # keep track of the args
+  mock_call_args = []
+
+  # implement it
+  def the_mock(*args):
+    mock_call_args.append(args)
+    if return_value != None:
+      return return_value
+
+  # replace it
+  setattr(original_holder, function_name, the_mock)
+
+  # run
+  yield mock_call_args
+
+  # reset
+  setattr(original_holder, function_name, original_implementation)
