@@ -26,169 +26,183 @@ from contextlib import contextmanager
 
 base_dir = os.getcwd()
 
+
 class DefaultArgs(object):
-  def __init__(self):
-    self.filenames = []
-    self.rootdir = "."
-    self.boilerplate_dir = base_dir
-    self.verbose = True
-    self.ensure = False
+    def __init__(self):
+        self.filenames = []
+        self.rootdir = "."
+        self.boilerplate_dir = base_dir
+        self.verbose = True
+        self.ensure = False
+
 
 class TestBoilerplate(unittest.TestCase):
-  """
-  Note: run this test from the hack/boilerplate directory.
+    """
+    Note: run this test from the hack/boilerplate directory.
 
-  $ python -m unittest boilerplate_test
-  """
-  def setUp(self):
-    os.chdir(base_dir)
-    boilerplate.args = DefaultArgs()
+    $ python -m unittest boilerplate_test
+    """
 
-  def test_boilerplate(self):
-    os.chdir("test/")
+    def setUp(self):
+        os.chdir(base_dir)
+        boilerplate.args = DefaultArgs()
 
-    # capture stdout
-    old_stdout = sys.stdout
-    sys.stdout = StringIO.StringIO()
+    def test_boilerplate(self):
+        os.chdir("test/")
 
-    ret = boilerplate.main()
+        # capture stdout
+        old_stdout = sys.stdout
+        sys.stdout = StringIO.StringIO()
 
-    output = sorted(sys.stdout.getvalue().split())
+        ret = boilerplate.main()
 
-    sys.stdout = old_stdout
+        output = sorted(sys.stdout.getvalue().split())
 
-    self.assertEquals(
-        output, ['././fail.go', '././fail.py', '././fail.sh'])
+        sys.stdout = old_stdout
 
-  def test_read_config(self):
-    config_file = "./test_with_config_file/boilerplate.json"
-    config = boilerplate.read_config_file(config_file)
-    self.assertEqual(config.get('dirs_to_skip'), ['dir_to_skip', 'dont_want_this', 'not_interested', '.'])
-    self.assertEqual(config.get('not_generated_files_to_skip'), ['alice skips a file', 'bob skips another file'])
+        self.assertEquals(
+            output, ['././fail.go', '././fail.py', '././fail.sh'])
 
-  def test_read_nonexistent_config(self):
-    config_file = '/nonexistent'
-    config = boilerplate.read_config_file(config_file)
-    self.assertEqual(config['dirs_to_skip'], boilerplate.default_skipped_dirs)
-    self.assertEqual(config['not_generated_files_to_skip'], boilerplate.default_skipped_not_generated)
+    def test_read_config(self):
+        config_file = "./test_with_config_file/boilerplate.json"
+        config = boilerplate.read_config_file(config_file)
+        self.assertEqual(config.get('dirs_to_skip'), [
+                         'dir_to_skip', 'dont_want_this', 'not_interested', '.'])
+        self.assertEqual(config.get('not_generated_files_to_skip'), [
+                         'alice skips a file', 'bob skips another file'])
 
-  def test_read_malformed_config(self):
-    config_file = './test_with_config_file/boilerplate.bad.json'
-    with self.assertRaises(Exception):
-      boilerplate.read_config_file(config_file)
+    def test_read_nonexistent_config(self):
+        config_file = '/nonexistent'
+        config = boilerplate.read_config_file(config_file)
+        self.assertEqual(config['dirs_to_skip'],
+                         boilerplate.default_skipped_dirs)
+        self.assertEqual(config['not_generated_files_to_skip'],
+                         boilerplate.default_skipped_not_generated)
 
-  def test_read_config_called_with_correct_path(self):
-    boilerplate.args.rootdir = "/tmp/some/path"
-    with simple_mocker('read_config_file', boilerplate, return_value={}) as mock_args:
-      boilerplate.main()
-      self.assertEqual(len(mock_args), 1)
-      self.assertEqual(mock_args[0][0], "/tmp/some/path/boilerplate.json")
+    def test_read_malformed_config(self):
+        config_file = './test_with_config_file/boilerplate.bad.json'
+        with self.assertRaises(Exception):
+            boilerplate.read_config_file(config_file)
 
-  def test_get_files_with_skipping_dirs(self):
-    refs = boilerplate.get_refs()
-    skip_dirs = ['.']
-    files = boilerplate.get_files(refs, skip_dirs)
+    def test_read_config_called_with_correct_path(self):
+        boilerplate.args.rootdir = "/tmp/some/path"
+        with function_mocker('read_config_file', boilerplate, return_value={}) as mock_args:
+            boilerplate.main()
+            self.assertEqual(len(mock_args), 1)
+            self.assertEqual(
+                mock_args[0][0], "/tmp/some/path/boilerplate.json")
 
-    self.assertEqual(files, [])
+    def test_get_files_with_skipping_dirs(self):
+        refs = boilerplate.get_refs()
+        skip_dirs = ['.']
+        files = boilerplate.get_files(refs, skip_dirs)
 
-  def test_get_files_with_skipping_not_generated_files(self):
-    refs = boilerplate.get_refs()
-    regexes = boilerplate.get_regexs()
-    files_to_skip = ['boilerplate.py']
-    filename = 'boilerplate.py'
+        self.assertEqual(files, [])
 
-    passes = boilerplate.file_passes(filename, refs, regexes, files_to_skip)
+    def test_get_files_with_skipping_not_generated_files(self):
+        refs = boilerplate.get_refs()
+        regexes = boilerplate.get_regexs()
+        files_to_skip = ['boilerplate.py']
+        filename = 'boilerplate.py'
 
-    self.assertEqual(passes, True)
+        passes = boilerplate.file_passes(
+            filename, refs, regexes, files_to_skip)
 
-  def test_ignore_when_no_valid_boilerplate_template(self):
-    with tempfile.NamedTemporaryFile() as temp_file_to_check:
-      passes = boilerplate.file_passes(temp_file_to_check.name, boilerplate.get_refs(), boilerplate.get_regexs(), [])
-      self.assertEqual(passes, True)
+        self.assertEqual(passes, True)
 
-  def test_add_boilerplate_to_file(self):
-    with tmp_copy("./test/fail.sh", suffix='.sh') as tmp_file_name:
-      boilerplate.ensure_boilerplate_file(
-        tmp_file_name, boilerplate.get_refs(), boilerplate.get_regexs(), []
-      )
+    def test_ignore_when_no_valid_boilerplate_template(self):
+        with tempfile.NamedTemporaryFile() as temp_file_to_check:
+            passes = boilerplate.file_passes(
+                temp_file_to_check.name, boilerplate.get_refs(), boilerplate.get_regexs(), [])
+            self.assertEqual(passes, True)
 
-      passes = boilerplate.file_passes(tmp_file_name, boilerplate.get_refs(), boilerplate.get_regexs(), [])
-      self.assertEqual(passes, True)
+    def test_add_boilerplate_to_file(self):
+        with tmp_copy("./test/fail.sh", suffix='.sh') as tmp_file_name:
+            boilerplate.ensure_boilerplate_file(
+                tmp_file_name, boilerplate.get_refs(), boilerplate.get_regexs(), []
+            )
 
-      with open(tmp_file_name) as x:
-        first_line = x.read().splitlines()[0]
-        self.assertEqual(first_line, '#!/usr/bin/env bash')
+            passes = boilerplate.file_passes(
+                tmp_file_name, boilerplate.get_refs(), boilerplate.get_regexs(), [])
+            self.assertEqual(passes, True)
 
-  def test_replace_specials(self):
-    extension = "sh"
-    regexs = boilerplate.get_regexs()
+            with open(tmp_file_name) as x:
+                first_line = x.read().splitlines()[0]
+                self.assertEqual(first_line, '#!/usr/bin/env bash')
 
-    original_content = "\n".join([
-      "#!/usr/bin/env bash",
-      "",
-      "something something",
-      "#!/usr/bin/env bash",
-    ])
-    expected_content = "\n".join([
-      "something something",
-      "#!/usr/bin/env bash",
-    ])
-    expected_match = "\n".join([
-      "#!/usr/bin/env bash",
-      "\n",
-    ])
+    def test_replace_specials(self):
+        extension = "sh"
+        regexs = boilerplate.get_regexs()
 
-    actual_content, actual_match = boilerplate.replace_specials(
-      original_content, extension, regexs
-    )
+        original_content = "\n".join([
+            "#!/usr/bin/env bash",
+            "",
+            "something something",
+            "#!/usr/bin/env bash",
+        ])
+        expected_content = "\n".join([
+            "something something",
+            "#!/usr/bin/env bash",
+        ])
+        expected_match = "\n".join([
+            "#!/usr/bin/env bash",
+            "\n",
+        ])
 
-    self.assertEquals(actual_content, expected_content)
-    self.assertEquals(actual_match, expected_match)
+        actual_content, actual_match = boilerplate.replace_specials(
+            original_content, extension, regexs
+        )
 
-  def test_ensure_command_line_flag(self):
-    os.chdir("./test")
-    boilerplate.args.ensure = True
+        self.assertEquals(actual_content, expected_content)
+        self.assertEquals(actual_match, expected_match)
 
-    with simple_mocker('ensure_boilerplate_file', boilerplate) as mock_args:
-      boilerplate.main()
-      changed_files = list(map(lambda x : x[0], mock_args))
-      self.assertEquals(changed_files, [
-        "././fail.sh",
-        "././fail.py",
-        "././fail.go",
-      ])
+    def test_ensure_command_line_flag(self):
+        os.chdir("./test")
+        boilerplate.args.ensure = True
+
+        with function_mocker('ensure_boilerplate_file', boilerplate) as mock_args:
+            boilerplate.main()
+            changed_files = list(map(lambda x: x[0], mock_args))
+
+            self.assertEquals(changed_files, [
+                "././fail.sh",
+                "././fail.py",
+                "././fail.go",
+            ])
+
 
 @contextmanager
 def tmp_copy(file_org, suffix=None):
-  file_copy_fd, file_copy = tempfile.mkstemp(suffix)
+    file_copy_fd, file_copy = tempfile.mkstemp(suffix)
 
-  with open(file_org) as org:
-    os.write(file_copy_fd, org.read())
-    os.close(file_copy_fd)
+    with open(file_org) as org:
+        os.write(file_copy_fd, org.read())
+        os.close(file_copy_fd)
 
-  yield file_copy
+    yield file_copy
 
-  os.unlink(file_copy)
+    os.unlink(file_copy)
+
 
 @contextmanager
-def simple_mocker(function_name, original_holder, return_value=None):
-  # save original
-  original_implementation = getattr(original_holder, function_name)
+def function_mocker(function_name, original_holder, return_value=None):
+    # save original function implementation
+    original_implementation = getattr(original_holder, function_name)
 
-  # keep track of the args
-  mock_call_args = []
+    # keep track of the args
+    mock_call_args = []
 
-  # implement it
-  def the_mock(*args):
-    mock_call_args.append(args)
-    if return_value != None:
-      return return_value
+    # mock the function
+    def the_mock(*args):
+        mock_call_args.append(args)
+        if return_value != None:
+            return return_value
 
-  # replace it
-  setattr(original_holder, function_name, the_mock)
+    # use the mock in place of the original implementation
+    setattr(original_holder, function_name, the_mock)
 
-  # run
-  yield mock_call_args
+    # run
+    yield mock_call_args
 
-  # reset
-  setattr(original_holder, function_name, original_implementation)
+    # reset the original implementation
+    setattr(original_holder, function_name, original_implementation)

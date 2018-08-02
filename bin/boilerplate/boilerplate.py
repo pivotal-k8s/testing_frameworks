@@ -55,12 +55,13 @@ args = parser.parse_args()
 verbose_out = sys.stderr if args.verbose else open("/dev/null", "w")
 
 default_skipped_dirs = ['Godeps', 'third_party', '_gopath', '_output', '.git', 'cluster/env.sh',
-                "vendor", "test/e2e/generated/bindata.go", "hack/boilerplate/test",
-                "pkg/generated/bindata.go"]
+                        "vendor", "test/e2e/generated/bindata.go", "hack/boilerplate/test",
+                        "pkg/generated/bindata.go"]
 
 # list all the files contain 'DO NOT EDIT', but are not generated
 default_skipped_not_generated = ['hack/build-ui.sh', 'hack/lib/swagger.sh',
-                             'hack/boilerplate/boilerplate.py']
+                                 'hack/boilerplate/boilerplate.py']
+
 
 def get_refs():
     refs = {}
@@ -75,6 +76,7 @@ def get_refs():
 
     return refs
 
+
 def is_generated_file(filename, data, regexs, files_to_skip):
     for d in files_to_skip:
         if d in filename:
@@ -83,25 +85,27 @@ def is_generated_file(filename, data, regexs, files_to_skip):
     p = regexs["generated"]
     return p.search(data)
 
+
 def match_and_delete(content, re):
-  match = re.search(content)
-  if match == None:
-    return content, None
-  return re.sub("", content, 1), match.group()
+    match = re.search(content)
+    if match == None:
+        return content, None
+    return re.sub("", content, 1), match.group()
 
 
 def replace_specials(content, extension, regexs):
-  # remove build tags from the top of Go files
-  if extension == "go" or extension =="generatego":
-    re = regexs["go_build_constraints"]
-    return match_and_delete(content, re)
+    # remove build tags from the top of Go files
+    if extension == "go" or extension == "generatego":
+        re = regexs["go_build_constraints"]
+        return match_and_delete(content, re)
 
-  # remove shebang from the top of shell files
-  if extension == "sh":
-    re = regexs["shebang"]
-    return match_and_delete(content, re)
+    # remove shebang from the top of shell files
+    if extension == "sh":
+        re = regexs["shebang"]
+        return match_and_delete(content, re)
 
-  return content, None
+    return content, None
+
 
 def file_passes(filename, refs, regexs, not_generated_files_to_skip):
     try:
@@ -113,13 +117,15 @@ def file_passes(filename, refs, regexs, not_generated_files_to_skip):
     data = f.read()
     f.close()
 
-    ref, extension, generated = analyze_file(filename, data, refs, regexs, not_generated_files_to_skip)
+    ref, extension, generated = analyze_file(
+        filename, data, refs, regexs, not_generated_files_to_skip)
 
     return file_content_passes(data, filename, ref, extension, generated, regexs)
 
+
 def file_content_passes(data, filename, ref, extension, generated, regexs):
     if ref == None:
-      return True
+        return True
 
     data, _ = replace_specials(data, extension, regexs)
 
@@ -164,17 +170,20 @@ def file_content_passes(data, filename, ref, extension, generated, regexs):
 
     return True
 
+
 def file_extension(filename):
     return os.path.splitext(filename)[1].split(".")[-1].lower()
 
+
 def read_config_file(conf_path):
-  try:
-    with open(conf_path) as json_data_file:
-      return json.load(json_data_file)
-  except ValueError:
-    raise
-  except:
-    return {'dirs_to_skip': default_skipped_dirs, 'not_generated_files_to_skip': default_skipped_not_generated}
+    try:
+        with open(conf_path) as json_data_file:
+            return json.load(json_data_file)
+    except ValueError:
+        raise
+    except:
+        return {'dirs_to_skip': default_skipped_dirs, 'not_generated_files_to_skip': default_skipped_not_generated}
+
 
 def normalize_files(files, dirs_to_skip):
     newfiles = []
@@ -186,6 +195,7 @@ def normalize_files(files, dirs_to_skip):
         if not os.path.isabs(pathname):
             newfiles[i] = os.path.join(args.rootdir, pathname)
     return newfiles
+
 
 def get_files(extensions, dirs_to_skip):
     files = []
@@ -214,9 +224,11 @@ def get_files(extensions, dirs_to_skip):
             outfiles.append(pathname)
     return outfiles
 
+
 def analyze_file(file_name, file_content, refs, regexs, not_generated_files_to_skip):
     # determine if the file is automatically generated
-    generated = is_generated_file(file_name, file_content, regexs, not_generated_files_to_skip)
+    generated = is_generated_file(
+        file_name, file_content, regexs, not_generated_files_to_skip)
 
     base_name = os.path.basename(file_name)
     if generated:
@@ -231,54 +243,61 @@ def analyze_file(file_name, file_content, refs, regexs, not_generated_files_to_s
 
     return ref, extension, generated
 
+
 def ensure_boilerplate_file(file_name, refs, regexs, not_generated_files_to_skip):
-  with open(file_name, mode='r+') as f:
-    file_content = f.read()
+    with open(file_name, mode='r+') as f:
+        file_content = f.read()
 
-    ref, extension, generated = analyze_file(file_name, file_content, refs, regexs, not_generated_files_to_skip)
+        ref, extension, generated = analyze_file(
+            file_name, file_content, refs, regexs, not_generated_files_to_skip)
 
-    # licence header
-    licence_header = os.linesep.join(ref)
+        # licence header
+        licence_header = os.linesep.join(ref)
 
-    # content without shebang and such
-    content_without_specials, special_header = replace_specials(file_content, extension, regexs)
+        # content without shebang and such
+        content_without_specials, special_header = replace_specials(
+            file_content, extension, regexs)
 
-    # new content, to be writen to the file
-    new_content = ''
+        # new content, to be writen to the file
+        new_content = ''
 
-    # shebang and such
-    if special_header != None:
-      new_content += special_header
+        # shebang and such
+        if special_header != None:
+            new_content += special_header
 
-    # licence header
-    current_year = str(datetime.datetime.now().year)
-    year_replacer = regexs['year']
-    new_content += year_replacer.sub(current_year, licence_header, 1)
+        # licence header
+        current_year = str(datetime.datetime.now().year)
+        year_replacer = regexs['year']
+        new_content += year_replacer.sub(current_year, licence_header, 1)
 
-    # actual content
-    new_content += os.linesep + content_without_specials
+        # actual content
+        new_content += os.linesep + content_without_specials
 
-    f.seek(0)
-    f.write(new_content)
+        f.seek(0)
+        f.write(new_content)
+
 
 def get_dates():
     years = datetime.datetime.now().year
     return '(%s)' % '|'.join((str(year) for year in range(2014, years+1)))
 
+
 def get_regexs():
     regexs = {}
     # Search for "YEAR" which exists in the boilerplate, but shouldn't in the real thing
-    regexs["year"] = re.compile( 'YEAR' )
+    regexs["year"] = re.compile('YEAR')
     # get_dates return 2014, 2015, 2016, 2017, or 2018 until the current year as a regex like: "(2014|2015|2016|2017|2018)";
     # company holder names can be anything
     regexs["date"] = re.compile(get_dates())
     # strip // +build \n\n build constraints
-    regexs["go_build_constraints"] = re.compile(r"^(// \+build.*\n)+\n", re.MULTILINE)
+    regexs["go_build_constraints"] = re.compile(
+        r"^(// \+build.*\n)+\n", re.MULTILINE)
     # strip #!.* from shell scripts
     regexs["shebang"] = re.compile(r"^(#!.*\n)\n*", re.MULTILINE)
     # Search for generated files
-    regexs["generated"] = re.compile( 'DO NOT EDIT' )
+    regexs["generated"] = re.compile('DO NOT EDIT')
     return regexs
+
 
 def main():
     config_file_path = os.path.join(args.rootdir, "boilerplate.json")
@@ -290,15 +309,16 @@ def main():
     not_generated_files_to_skip = config.get('not_generated_files_to_skip', [])
 
     for filename in filenames:
-      if not file_passes(filename, refs, regexs, not_generated_files_to_skip):
-        if args.ensure:
-          print("adding boilerplate header to %s" % filename )
-          ensure_boilerplate_file(filename, refs, regexs, not_generated_files_to_skip)
-        else:
-          print(filename, file=sys.stdout)
-
+        if not file_passes(filename, refs, regexs, not_generated_files_to_skip):
+            if args.ensure:
+                print("adding boilerplate header to %s" % filename)
+                ensure_boilerplate_file(
+                    filename, refs, regexs, not_generated_files_to_skip)
+            else:
+                print(filename, file=sys.stdout)
 
     return 0
 
+
 if __name__ == "__main__":
-  sys.exit(main())
+    sys.exit(main())
