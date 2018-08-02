@@ -34,7 +34,12 @@ rc=$((rc || $?))
 
 echo "Verify Boilerplate"
 "${base_dir}/bin/verify-boilerplate.sh" --rootdir="$base_dir" --boilerplate-dir="${base_dir}/bin/boilerplate/"
-rc=$((rc || $?))
+verify_exit_code=$?
+if [[ $verify_exit_code -ne 0 ]]; then
+  echo "Verify Boilerplate failed. Run ${base_dir}/bin/ensure-boilerplate.sh to automatically add missing licence headers."
+fi
+rc=$((rc || verify_exit_code))
+
 
 echo "Running go fmt"
 diff <(echo -n) <(go_dirs | xargs -0 gofmt -s -d -l)
