@@ -24,13 +24,32 @@ SCRIPT_DIR=$(dirname "${BASH_SOURCE}")
 boilerDir="${SCRIPT_DIR}/boilerplate/"
 boiler="${boilerDir}/boilerplate.py"
 
-files_need_boilerplate=($(${boiler} "$@"))
+verify() {
+  files_need_boilerplate=($(${boiler} "$@"))
 
-# Run boilerplate check
-if [[ ${#files_need_boilerplate[@]} -gt 0 ]]; then
-  for file in "${files_need_boilerplate[@]}"; do
-    echo "Boilerplate header is wrong for: ${file}" >&2
-  done
+  # Run boilerplate check
+  if [[ ${#files_need_boilerplate[@]} -gt 0 ]]; then
+    for file in "${files_need_boilerplate[@]}"; do
+      echo "Boilerplate header is wrong for: ${file}" >&2
+    done
 
-  exit 1
-fi
+    return 1
+  fi
+}
+
+ensure() {
+  "$boiler" --ensure "$@"
+}
+
+case "$0" in
+  */ensure-boilerplate.sh)
+    ensure "$@"
+    ;;
+  */verify-boilerplate.sh)
+    verify "$@"
+    ;;
+  *)
+    echo "unknown command '$0'" >&2
+    exit 1
+    ;;
+esac
