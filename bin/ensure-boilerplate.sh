@@ -1,1 +1,1 @@
-verify-boilerplate.sh
+../tools/contrib/ensure-boilerplate.sh

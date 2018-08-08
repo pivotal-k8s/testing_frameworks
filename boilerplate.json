@@ -2,10 +2,6 @@
   "dirs_to_skip": [
     "dind/assets",
     "vendor",
-    "bin/boilerplate/test",
-    "bin/boilerplate/test_with_config_file"
-  ],
-  "not_generated_files_to_skip": [
-    "bin/boilerplate/boilerplate.py"
+    "tools/contrib"
   ]
 }
