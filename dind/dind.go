@@ -19,7 +19,6 @@ package dind
 import (
 	"bytes"
 	"crypto/rand"
-	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -114,17 +113,6 @@ func (d *Dind) getAPIServerPort() (string, error) {
 	}
 
 	return fmt.Sprintf("%d", port), nil
-}
-
-// ContextName should maybe be implemented in k-d-c
-// TODO: move to k-d-c
-func (d *Dind) ContextName() string {
-	if d.label == "" {
-		return "dind"
-	}
-	hasher := sha1.New()
-	hasher.Write([]byte(d.label)) // #nosec, hasher#Write never returns an error
-	return fmt.Sprintf("dind-%x", hasher.Sum(nil))
 }
 
 func generateRandomString(s int) (string, error) {

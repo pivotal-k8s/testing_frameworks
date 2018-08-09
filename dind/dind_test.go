@@ -62,7 +62,7 @@ var _ = Describe("Dind", func() {
 		url := fixture.ClientConfig()
 		Expect(url.Port()).To(Equal("1234"))
 
-		kubectl := &dindKubeCtl{ContextName: fixture.ContextName()}
+		kubectl := &dindKubeCtl{URL: fixture.ClientConfig()}
 		stdout, _, err := kubectl.Run("get", "nodes", "-o", "json")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -77,8 +77,8 @@ var _ = Describe("Dind", func() {
 
 // TODO: move lightweight's kubectl into a shared package
 type dindKubeCtl struct {
-	kubectl     *lightweight.KubeCtl
-	ContextName string
+	URL     *url.URL
+	kubectl *lightweight.KubeCtl
 }
 
 func (k *dindKubeCtl) Run(args ...string) (io.Reader, io.Reader, error) {
@@ -88,7 +88,7 @@ func (k *dindKubeCtl) Run(args ...string) (io.Reader, io.Reader, error) {
 
 	k.kubectl.Opts = append(
 		k.kubectl.Opts,
-		fmt.Sprintf("--context=%s", k.ContextName),
+		fmt.Sprintf("--server=%s", k.URL),
 	)
 
 	stdout, stderr, err := k.kubectl.Run(args...)
