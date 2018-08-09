@@ -75,6 +75,7 @@ var _ = Describe("Dind", func() {
 	})
 })
 
+// TODO: move lightweight's kubectl into a shared package
 type dindKubeCtl struct {
 	kubectl     *lightweight.KubeCtl
 	ContextName string
