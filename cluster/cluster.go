@@ -101,7 +101,7 @@ type Config struct {
 	// Shape describes the shape of a cluster.
 	Shape Shape
 
-	base.MasterConfiguration
+	base.InitConfiguration
 	lightweightMasterConfiguration
 }
 
