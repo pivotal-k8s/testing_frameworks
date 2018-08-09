@@ -36,6 +36,13 @@ func UpCommand(label string, stdOut, stdErr io.Writer, clusterConfig cluster.Con
 		additionalEnv = append(additionalEnv, fmt.Sprintf("APISERVER_PORT=%s", port))
 	}
 
+	if v := clusterConfig.KubernetesVersion; v != "" {
+		additionalEnv = append(
+			additionalEnv,
+			fmt.Sprintf("DIND_IMAGE=mirantis/kubeadm-dind-cluster:%s", v),
+		)
+	}
+
 	cmd := clusterCmd(label, "up", additionalEnv...)
 	return attachIO(cmd, stdOut, stdErr)
 }

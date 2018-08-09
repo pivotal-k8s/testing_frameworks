@@ -51,10 +51,10 @@ var _ = Describe("command", func() {
 		It("sets NUM_NODES", func() {
 			Expect(cmd.Env).To(haveVariableWithValue("NUM_NODES", "1234"))
 		})
-		It("doesn't set APISERVER_PORT", func() {
+
+		It("doesn't set APISERVER_PORT by default", func() {
 			Expect(cmd.Env).NotTo(haveVariable("APISERVER_PORT"))
 		})
-
 		Context("with APIServer URL configured", func() {
 			BeforeEach(func() {
 				clusterConfig.API.BindURL = &url.URL{Host: ":5678"}
@@ -64,6 +64,17 @@ var _ = Describe("command", func() {
 			})
 		})
 
+		It("doesn't set DIND_IMAGE by default", func() {
+			Expect(cmd.Env).NotTo(haveVariable("DIND_IMAGE"))
+		})
+		Context("with kubernetes version configured", func() {
+			BeforeEach(func() {
+				clusterConfig.KubernetesVersion = "some_version"
+			})
+			It("sets DIND_IMAGE accordingly", func() {
+				Expect(cmd.Env).To(haveVariableWithValue("DIND_IMAGE", "mirantis/kubeadm-dind-cluster:some_version"))
+			})
+		})
 	})
 
 	Context("CleanCommand", func() {
