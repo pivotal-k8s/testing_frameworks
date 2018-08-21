@@ -56,6 +56,7 @@ main() {
     | cleanMeta \
     | setPackage \
     | gofmt -s \
+    | goimports \
     > "${DEST}/kubeadm.go"
 }
 
