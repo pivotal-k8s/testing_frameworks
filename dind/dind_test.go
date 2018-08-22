@@ -59,10 +59,13 @@ var _ = Describe("Dind", func() {
 
 		Expect(fixture.Setup(config)).To(Succeed())
 
-		url := fixture.ClientConfig()
-		Expect(url.Port()).To(Equal("1234"))
+		clientConf := fixture.ClientConfig()
+		u, err := url.Parse(clientConf.Clusters[0].Cluster.Server)
+		Expect(err).NotTo(HaveOccurred())
 
-		kubectl := &dindKubeCtl{URL: fixture.ClientConfig()}
+		Expect(u.Port()).To(Equal("1234"))
+
+		kubectl := &dindKubeCtl{URL: u}
 		stdout, _, err := kubectl.Run("get", "nodes", "-o", "json")
 		Expect(err).NotTo(HaveOccurred())
 

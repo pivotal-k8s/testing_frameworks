@@ -20,9 +20,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"net/url"
 
 	"sigs.k8s.io/testing_frameworks/cluster"
+	"sigs.k8s.io/testing_frameworks/cluster/type/base"
 	"sigs.k8s.io/testing_frameworks/dind/internal"
 )
 
@@ -51,13 +51,25 @@ func (d *Dind) TearDown() error {
 		Run()
 }
 
-func (d *Dind) ClientConfig() *url.URL {
+func (d *Dind) ClientConfig() base.Config {
+	c := base.Config{}
+
 	// TODO: let that error bubble up
-	port, _ := d.getAPIServerPort()
-	return &url.URL{
-		Scheme: "http",
-		Host:   fmt.Sprintf("localhost:%s", port),
-	}
+	APIServerPort, _ := d.getAPIServerPort()
+
+	cluster := base.NamedCluster{}
+	cluster.Name = "k-d-c"
+	cluster.Cluster.Server = fmt.Sprintf("http://localhost:%s", APIServerPort)
+
+	ctx := base.NamedContext{}
+	ctx.Name = "k-d-c"
+	ctx.Context.Cluster = cluster.Name
+
+	c.Clusters = []base.NamedCluster{cluster}
+	c.Contexts = []base.NamedContext{ctx}
+	c.CurrentContext = ctx.Name
+
+	return c
 }
 
 func (d *Dind) getAPIServerPort() (string, error) {

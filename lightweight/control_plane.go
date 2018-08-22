@@ -21,6 +21,7 @@ import (
 	"net/url"
 
 	"sigs.k8s.io/testing_frameworks/cluster"
+	"sigs.k8s.io/testing_frameworks/cluster/type/base"
 )
 
 // ControlPlane is a struct that knows how to start your test control plane.
@@ -104,9 +105,24 @@ func (f *ControlPlane) Stop() error {
 	return nil
 }
 
-// ClientConfig returns the URL of your APIServer. This is an alias for APIURL()
-func (f *ControlPlane) ClientConfig() *url.URL {
-	return f.APIURL()
+// ClientConfig returns all the configuration a client needs to connect to this
+// cluster's kubernetes API.
+func (f *ControlPlane) ClientConfig() base.Config {
+	c := base.Config{}
+
+	cluster := base.NamedCluster{}
+	cluster.Name = "lightweight-cluster"
+	cluster.Cluster.Server = f.APIURL().String()
+
+	ctx := base.NamedContext{}
+	ctx.Name = "lightweight-context"
+	ctx.Context.Cluster = cluster.Name
+
+	c.Clusters = []base.NamedCluster{cluster}
+	c.Contexts = []base.NamedContext{ctx}
+	c.CurrentContext = ctx.Name
+
+	return c
 }
 
 // APIURL returns the URL you should connect to to talk to your API.

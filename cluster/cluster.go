@@ -31,8 +31,6 @@ limitations under the License.
 package cluster
 
 import (
-	"net/url"
-
 	"sigs.k8s.io/testing_frameworks/cluster/type/base"
 	"sigs.k8s.io/testing_frameworks/cluster/type/lightweight"
 )
@@ -59,11 +57,12 @@ type Fixture interface {
 	// second call should also succeed.
 	TearDown() error
 
-	// ClientConfig returns the URL at which you can find the APIServer
-	// of the test cluster. In future, this will likely become a
-	// rest.Config from
-	// https://github.com/kubernetes/client-go/blob/master/rest/config.go.
-	ClientConfig() *url.URL
+	// ClientConfig returns all the configuration a client needs to connect to a
+	// fixture's APIServer.
+	// The type returned is a copy of `cliencmd.Config` from `k/k` and therefore
+	// should be compatible when serialized. When serialized to a file, it can be
+	// used as a kubeconfig file.
+	ClientConfig() base.Config
 }
 
 func DoDefaulting(c Config) Config {

@@ -18,6 +18,7 @@ package integration_tests
 
 import (
 	"io/ioutil"
+	"net/url"
 	"path/filepath"
 	"time"
 
@@ -44,7 +45,10 @@ var _ = Describe("Cluster Framework Compliance", func() {
 		err = fixture.Setup(cluster.Config{})
 		Expect(err).NotTo(HaveOccurred(), "Expected controlPlane to start successfully")
 
-		apiURL := fixture.ClientConfig()
+		config := fixture.ClientConfig()
+		apiURL, err := url.Parse(config.Clusters[0].Cluster.Server)
+		Expect(err).NotTo(HaveOccurred())
+
 		isAPIServerListening := isSomethingListeningOnPort(apiURL.Host)
 		Expect(isAPIServerListening()).To(BeTrue())
 	})
