@@ -18,7 +18,6 @@ package dind_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/url"
 
@@ -27,7 +26,7 @@ import (
 
 	"sigs.k8s.io/testing_frameworks/cluster"
 	"sigs.k8s.io/testing_frameworks/dind"
-	"sigs.k8s.io/testing_frameworks/lightweight"
+	"sigs.k8s.io/testing_frameworks/internal"
 )
 
 var _ = Describe("Dind", func() {
@@ -65,7 +64,7 @@ var _ = Describe("Dind", func() {
 
 		Expect(u.Port()).To(Equal("1234"))
 
-		kubectl := &dindKubeCtl{URL: u}
+		kubectl := (&internal.KubeCtl{}).Configure(fixture)
 		stdout, _, err := kubectl.Run("get", "nodes", "-o", "json")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -77,29 +76,6 @@ var _ = Describe("Dind", func() {
 		Expect(workerCount).To(Equal(2))
 	})
 })
-
-// TODO: move lightweight's kubectl into a shared package
-type dindKubeCtl struct {
-	URL     *url.URL
-	kubectl *lightweight.KubeCtl
-}
-
-func (k *dindKubeCtl) Run(args ...string) (io.Reader, io.Reader, error) {
-	if k.kubectl == nil {
-		k.kubectl = &lightweight.KubeCtl{}
-	}
-
-	k.kubectl.Opts = append(
-		k.kubectl.Opts,
-		fmt.Sprintf("--server=%s", k.URL),
-	)
-
-	stdout, stderr, err := k.kubectl.Run(args...)
-	stdout = io.TeeReader(stdout, GinkgoWriter)
-	stderr = io.TeeReader(stderr, GinkgoWriter)
-
-	return stdout, stderr, err
-}
 
 func parseNodes(stdout io.Reader) (kubeNodes, error) {
 	nodes := kubeNodes{}

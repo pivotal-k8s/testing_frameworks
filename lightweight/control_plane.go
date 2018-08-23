@@ -17,7 +17,6 @@ limitations under the License.
 package lightweight
 
 import (
-	"fmt"
 	"net/url"
 
 	"sigs.k8s.io/testing_frameworks/cluster"
@@ -128,12 +127,4 @@ func (f *ControlPlane) ClientConfig() base.Config {
 // APIURL returns the URL you should connect to to talk to your API.
 func (f *ControlPlane) APIURL() *url.URL {
 	return &f.APIServer.processState.URL
-}
-
-// KubeCtl returns a pre-configured KubeCtl, ready to connect to this
-// ControlPlane.
-func (f *ControlPlane) KubeCtl() *KubeCtl {
-	k := &KubeCtl{}
-	k.Opts = append(k.Opts, fmt.Sprintf("--server=%s", f.APIURL()))
-	return k
 }

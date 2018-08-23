@@ -14,15 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package lightweight_test
+package internal_test
 
 import (
+	"io"
 	"io/ioutil"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "sigs.k8s.io/testing_frameworks/lightweight"
+	"sigs.k8s.io/testing_frameworks/cluster"
+	"sigs.k8s.io/testing_frameworks/cluster/type/base"
+	. "sigs.k8s.io/testing_frameworks/internal"
 )
 
 var _ = Describe("Kubectl", func() {
@@ -52,4 +55,44 @@ var _ = Describe("Kubectl", func() {
 			Expect(stderr).To(ContainSubstring("this is StdErr"))
 		})
 	})
+
+	Context("when configured for a fixture", func() {
+		It("holds some configuration", func() {
+			f := testFixture{}
+			k := &KubeCtl{Path: "bash"}
+			a := []string{"-c", "echo $KUBECONFIG"}
+
+			Expect(k.KubeConfig).To(BeNil())
+
+			k.Configure(f)
+
+			Expect(k.KubeConfig).NotTo(BeNil())
+
+			o, e, err := k.Run(a...)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(asString(o)).NotTo(BeEmpty())
+			Expect(asString(e)).To(BeEmpty())
+		})
+	})
 })
+
+type testFixture struct{}
+
+func (tf testFixture) Setup(c cluster.Config) error {
+	return nil
+}
+
+func (tf testFixture) TearDown() error {
+	return nil
+}
+
+func (tf testFixture) ClientConfig() base.Config {
+	return base.Config{}
+}
+
+func asString(r io.Reader) string {
+	b, err := ioutil.ReadAll(r)
+	ExpectWithOffset(1, err).NotTo(HaveOccurred())
+	return string(b)
+}

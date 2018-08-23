@@ -24,6 +24,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/testing_frameworks/internal"
 	"sigs.k8s.io/testing_frameworks/lightweight"
 )
 
@@ -54,10 +55,10 @@ var _ = Describe("The Testing Framework", func() {
 			fmt.Sprintf("Expected Etcd to listen for clients on %s,", etcdClientURL.Host))
 
 		By("Ensuring APIServer is listening")
-		CheckAPIServerIsReady(controlPlane.KubeCtl())
+		kubeCtl := (&internal.KubeCtl{}).Configure(controlPlane)
+		CheckAPIServerIsReady(kubeCtl)
 
 		By("getting a kubectl & run it against the control plane")
-		kubeCtl := controlPlane.KubeCtl()
 		stdout, stderr, err := kubeCtl.Run("get", "pods")
 		Expect(err).NotTo(HaveOccurred())
 		bytes, err := ioutil.ReadAll(stdout)
@@ -149,7 +150,7 @@ func isSomethingListeningOnPort(hostAndPort string) portChecker {
 // this changed behaviour does what it should do, we used the same test as in
 // k/k's test-cmd (see link above) and test if certain well-known known APIs
 // are actually available.
-func CheckAPIServerIsReady(kubeCtl *lightweight.KubeCtl) {
+func CheckAPIServerIsReady(kubeCtl *internal.KubeCtl) {
 	expectedAPIS := []string{
 		"/api/v1/namespaces/default/pods 200 OK",
 		"/api/v1/namespaces/default/replicationcontrollers 200 OK",
