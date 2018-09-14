@@ -1,6 +1,6 @@
 [submodule "dind/assets/bin"]
 	path = dind/assets/bin
-	url = https://github.com/pivotal-k8s/kubeadm-dind-cluster
+	url = https://github.com/kubernetes-sigs/kubeadm-dind-cluster
 [submodule "tools/contrib"]
 	path = tools/contrib
 	url = https://github.com/pivotal-k8s/kubernetes-contrib-tools.git
