@@ -44,10 +44,10 @@ type Etcd struct {
 	BindURL *url.URL
 }
 
-// API is a struct used as a nested struct in `API` to
+// APIEndpoint is a struct used as a nested struct in `API` to
 // add additional configuration properties needed by the "lightweight"
 // implementation to the main `API` struct.
-type API struct {
+type APIEndpoint struct {
 	// BindURL is a URL the API should listen on.
 	//
 	// If this is kept empty, it will be defaulted to a free port on "localhost".
