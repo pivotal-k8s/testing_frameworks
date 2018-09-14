@@ -30,15 +30,19 @@ import (
 var _ = Describe("command", func() {
 	var cmd *exec.Cmd
 	var clusterConfig cluster.Config
+	var upErrMatcher types.GomegaMatcher
 
 	BeforeEach(func() {
 		clusterConfig = cluster.Config{}
 		clusterConfig.Shape.NodeCount = 1234
+		upErrMatcher = Not(HaveOccurred())
 	})
 
 	Context("UpCommand", func() {
 		JustBeforeEach(func() {
-			cmd = UpCommand("some_label", nil, nil, clusterConfig)
+			var err error
+			cmd, err = UpCommand("some_label", nil, nil, clusterConfig)
+			Expect(err).To(upErrMatcher)
 		})
 
 		It("has minimal setup", func() {
@@ -73,6 +77,22 @@ var _ = Describe("command", func() {
 			It("sets DIND_IMAGE accordingly", func() {
 				Expect(cmd.Env).To(haveVariableWithValue("DIND_IMAGE", "mirantis/kubeadm-dind-cluster:some_version"))
 			})
+		})
+
+		Context("with invalid ControlPlaneEndpoint URL", func() {
+			BeforeEach(func() {
+				clusterConfig.ControlPlaneEndpoint = "123%45%6"
+				upErrMatcher = MatchError(ContainSubstring("invalid URL"))
+			})
+			It("errors", func() { /* actual test in JustBeforeEach */ })
+		})
+
+		Context("with non-local ControlPlaneEndpoint host", func() {
+			BeforeEach(func() {
+				clusterConfig.ControlPlaneEndpoint = "http://not.localhost:1234"
+				upErrMatcher = MatchError(ContainSubstring("only localhost"))
+			})
+			It("errors", func() { /* actual test in JustBeforeEach */ })
 		})
 	})
 

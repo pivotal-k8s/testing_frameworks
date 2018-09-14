@@ -17,6 +17,7 @@ limitations under the License.
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -27,14 +28,14 @@ import (
 	"sigs.k8s.io/testing_frameworks/internal"
 )
 
-func UpCommand(label string, stdOut, stdErr io.Writer, clusterConfig cluster.Config) *exec.Cmd {
+func UpCommand(label string, stdOut, stdErr io.Writer, clusterConfig cluster.Config) (*exec.Cmd, error) {
 	additionalEnv := []string{
 		fmt.Sprintf("NUM_NODES=%d", clusterConfig.Shape.NodeCount),
 	}
 
-	port, err := getPortFromURL(clusterConfig.ControlPlaneEndpoint)
+	port, err := validatedAPIPort(clusterConfig.ControlPlaneEndpoint)
 	if err != nil {
-		// TODO bubble up
+		return nil, err
 	}
 	if port != "" {
 		additionalEnv = append(additionalEnv, fmt.Sprintf("APISERVER_PORT=%s", port))
@@ -48,7 +49,7 @@ func UpCommand(label string, stdOut, stdErr io.Writer, clusterConfig cluster.Con
 	}
 
 	cmd := clusterCmd(label, "up", additionalEnv...)
-	return attachIO(cmd, stdOut, stdErr)
+	return attachIO(cmd, stdOut, stdErr), nil
 }
 
 func CleanCommand(label string, stdOut, stdErr io.Writer) *exec.Cmd {
@@ -90,13 +91,22 @@ func clusterEnv(label string, additionalEnv ...string) []string {
 	return env
 }
 
-func getPortFromURL(rawURL string) (string, error) {
+func validatedAPIPort(rawURL string) (string, error) {
 	if rawURL == "" {
 		return "", nil
 	}
 	parsedURL, err := url.Parse(rawURL)
 	if err != nil {
 		return "", err
+	}
+
+	host := parsedURL.Hostname()
+	// For k-d-c, APIServer is only allowed on localhost
+	// TODO: ipv6? other names?
+	isLocal := (host == "localhost" || host == "127.0.0.1")
+
+	if !isLocal {
+		return "", errors.New("only localhost allowed")
 	}
 
 	return parsedURL.Port(), nil

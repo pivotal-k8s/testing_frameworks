@@ -40,9 +40,12 @@ func (d *Dind) Setup(c cluster.Config) error {
 	}
 	d.label = label
 
-	return internal.
-		UpCommand(d.label, d.Out, d.Err, c).
-		Run()
+	cmd, err := internal.UpCommand(d.label, d.Out, d.Err, c)
+	if err != nil {
+		return err
+	}
+
+	return cmd.Run()
 }
 
 func (d *Dind) TearDown() error {
