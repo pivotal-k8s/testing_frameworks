@@ -40,6 +40,7 @@ s@\(^[^/].*\bkubeletconfigv1beta1\b.*\)@// TODO \1@g
 s@\(^[^/].*\bkubeletconfig\b.*\)@// TODO \1@g
 s@\(^[^/].*\bkubeproxyconfigv1alpha1\b.*\)@// TODO \1@g
 s@\(^[^/].*\bkubeproxyconfig\b.*\)@// TODO \1@g
+s@\(^[^/].*\bBootstrapTokenString\b.*\)@// TODO \1@g
 EOF
 }
 

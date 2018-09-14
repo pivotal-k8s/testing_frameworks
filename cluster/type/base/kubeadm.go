@@ -178,7 +178,7 @@ type Networking struct {
 type BootstrapToken struct {
 	// Token is used for establishing bidirectional trust between nodes and masters.
 	// Used for joining nodes in the cluster.
-	Token *BootstrapTokenString `json:"token"`
+	// TODO 	Token *BootstrapTokenString `json:"token"`
 	// Description sets a human-friendly message why this token exists and what it's used
 	// for, so other administrators can know its purpose.
 	Description string `json:"description,omitempty"`
