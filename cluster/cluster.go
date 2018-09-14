@@ -82,7 +82,6 @@ func DoDefaulting(c Config) Config {
 type (
 	lightweightMasterConfiguration = lightweight.MasterConfiguration
 	lightweightEtcd                = lightweight.Etcd
-	lightweightAPI                 = lightweight.API
 )
 
 // Config is a struct into which you can parse a YAML or JSON config
@@ -111,15 +110,6 @@ type Config struct {
 type Etcd struct {
 	base.Etcd
 	lightweightEtcd
-}
-
-// API contains elements describing APIServer configuration.
-//
-// It consists of a base API struct and additional configuration extensions for
-// different test cluster implementations.
-type API struct {
-	base.API
-	lightweightAPI
 }
 
 // Shape describs the shape of a cluster to be brought up.

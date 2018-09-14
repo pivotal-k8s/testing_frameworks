@@ -51,9 +51,13 @@ func (s *APIServer) Start() error {
 
 	s.processState = &internal.ProcessState{}
 
+	apiURL, err := url.Parse(clusterConf.ControlPlaneEndpoint)
+	if err != nil {
+		return err
+	}
 	s.processState.DefaultedProcessInput, err = internal.DoDefaulting(
 		"kube-apiserver",
-		clusterConf.API.BindURL,
+		apiURL,
 		clusterConf.CertificatesDir,
 		clusterConf.APIServerProcessConfig.Path,
 		clusterConf.APIServerProcessConfig.StartTimeout,

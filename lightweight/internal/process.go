@@ -67,7 +67,7 @@ type DefaultedProcessInput struct {
 
 func DoDefaulting(
 	name string,
-	listenUrl *url.URL,
+	listenURL *url.URL,
 	dir string,
 	path string,
 	startTimeout time.Duration,
@@ -80,7 +80,9 @@ func DoDefaulting(
 		StopTimeout:  stopTimeout,
 	}
 
-	if listenUrl == nil {
+	isEmptyURL := (listenURL == nil || listenURL.String() == "")
+
+	if isEmptyURL {
 		am := &AddressManager{}
 		port, host, err := am.Initialize()
 		if err != nil {
@@ -91,7 +93,7 @@ func DoDefaulting(
 			Host:   fmt.Sprintf("%s:%d", host, port),
 		}
 	} else {
-		defaults.URL = *listenUrl
+		defaults.URL = *listenURL
 	}
 
 	if dir == "" {

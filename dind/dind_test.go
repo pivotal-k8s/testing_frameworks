@@ -53,7 +53,7 @@ var _ = Describe("Dind", func() {
 		fixture.Err = GinkgoWriter
 
 		config := cluster.Config{}
-		config.API.BindURL = &url.URL{Scheme: "http", Host: "localhost:1234"}
+		config.ControlPlaneEndpoint = "http://localhost:1234"
 		config.Shape.NodeCount = 2
 
 		Expect(fixture.Setup(config)).To(Succeed())

@@ -17,7 +17,6 @@ limitations under the License.
 package internal_test
 
 import (
-	"net/url"
 	"os/exec"
 
 	. "github.com/onsi/ginkgo"
@@ -57,7 +56,7 @@ var _ = Describe("command", func() {
 		})
 		Context("with APIServer URL configured", func() {
 			BeforeEach(func() {
-				clusterConfig.API.BindURL = &url.URL{Host: ":5678"}
+				clusterConfig.ControlPlaneEndpoint = "http://localhost:5678"
 			})
 			It("sets APISERVER_PORT", func() {
 				Expect(cmd.Env).To(haveVariableWithValue("APISERVER_PORT", "5678"))

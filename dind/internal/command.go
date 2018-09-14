@@ -32,7 +32,11 @@ func UpCommand(label string, stdOut, stdErr io.Writer, clusterConfig cluster.Con
 		fmt.Sprintf("NUM_NODES=%d", clusterConfig.Shape.NodeCount),
 	}
 
-	if ok, port := getPortFromURL(clusterConfig.API.BindURL); ok {
+	port, err := getPortFromURL(clusterConfig.ControlPlaneEndpoint)
+	if err != nil {
+		// TODO bubble up
+	}
+	if port != "" {
 		additionalEnv = append(additionalEnv, fmt.Sprintf("APISERVER_PORT=%s", port))
 	}
 
@@ -86,9 +90,14 @@ func clusterEnv(label string, additionalEnv ...string) []string {
 	return env
 }
 
-func getPortFromURL(u *url.URL) (bool, string) {
-	if u == nil {
-		return false, ""
+func getPortFromURL(rawURL string) (string, error) {
+	if rawURL == "" {
+		return "", nil
 	}
-	return true, u.Port()
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		return "", err
+	}
+
+	return parsedURL.Port(), nil
 }
