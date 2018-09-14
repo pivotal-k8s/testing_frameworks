@@ -91,25 +91,16 @@ type (
 // extensions for different test cluster implementations.
 type Config struct {
 	// Etcd holds configuration for etcd.
-	Etcd Etcd
-
-	// API holds configuration for the k8s apiserver.
-	API API
+	Etcd struct {
+		base.Etcd
+		lightweightEtcd
+	}
 
 	// Shape describes the shape of a cluster.
 	Shape Shape
 
 	base.ClusterConfiguration
 	lightweightMasterConfiguration
-}
-
-// Etcd contains elements describing Etcd configuration.
-//
-// It consists of a base Etcd and additional configuration
-// extensions for different test cluster implementations.
-type Etcd struct {
-	base.Etcd
-	lightweightEtcd
 }
 
 // Shape describs the shape of a cluster to be brought up.
